@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link, router, useForm, usePage } from '@inertiajs/react';
 import { CalendarCheck, CalendarDays, Clock, Download, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
+import EventForm from '@/Components/Admin/EventForm';
 import Badge from '@/Components/Badge';
 import Button from '@/Components/Button';
 import Card from '@/Components/Card';
 import ConfirmDialog from '@/Components/ConfirmDialog';
 import { TextAreaField, inputClass } from '@/Components/Form/fields';
+import Modal from '@/Components/Modal';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { telUrl, whatsappUrl, withCountryCode } from '@/lib/contact';
 import { formatLongDate } from '@/lib/date';
@@ -81,8 +83,9 @@ function NotesEditor({ quote, editable }) {
 }
 
 /** Detalle de una cotización con seguimiento, notas y acciones de contacto. */
-export default function Show({ quote, abilities }) {
+export default function Show({ quote, abilities, conversion }) {
     const { siteSettings } = usePage().props;
+    const [converting, setConverting] = useState(false);
     const [confirmResend, setConfirmResend] = useState(false);
     const [resending, setResending] = useState(false);
     const status = quoteStatus(quote.status);
@@ -242,17 +245,42 @@ export default function Show({ quote, abilities }) {
                     <Card title="Seguimiento">
                         <div className="space-y-5">
                             {abilities.manage ? (
-                                <StatusControl quote={quote} canConvert={abilities.convert} />
+                                <StatusControl quote={quote} canConvert={abilities.convert} onConfirmRequest={() => setConverting(true)} />
                             ) : (
                                 <p className="text-sm">
                                     Estatus: <Badge tone={status.tone}>{status.label}</Badge>
                                 </p>
+                            )}
+                            {abilities.convert && conversion && (
+                                <Button className="w-full" onClick={() => setConverting(true)}>
+                                    <CalendarCheck className="h-4 w-4" aria-hidden="true" />
+                                    Confirmar y agendar evento
+                                </Button>
                             )}
                             <NotesEditor quote={quote} editable={abilities.manage} />
                         </div>
                     </Card>
                 </div>
             </div>
+
+            {conversion && (
+                <Modal
+                    open={converting}
+                    onClose={() => setConverting(false)}
+                    size="lg"
+                    title="Confirmar y agendar evento"
+                    description="Revisa los datos prellenados desde la cotización, registra el anticipo y confirma. Se validará la capacidad diaria de cada servicio."
+                >
+                    <EventForm
+                        compact
+                        initial={conversion.event}
+                        services={conversion.services}
+                        submitUrl={`/admin/cotizaciones/${quote.id}/convertir`}
+                        submitLabel="Confirmar y agendar"
+                        onCancel={() => setConverting(false)}
+                    />
+                </Modal>
+            )}
 
             <ConfirmDialog
                 open={confirmResend}

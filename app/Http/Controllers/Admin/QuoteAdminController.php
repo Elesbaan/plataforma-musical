@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CoverageZone;
 use App\Models\Quote;
+use App\Services\AgendaService;
 use App\Services\QuoteAdminService;
+use App\Services\QuoteConversionService;
 use App\Services\QuotePdfService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,16 +35,22 @@ class QuoteAdminController extends Controller
         ]);
     }
 
-    public function show(Request $request, Quote $quote): Response
+    public function show(Request $request, Quote $quote, QuoteConversionService $conversion, AgendaService $agenda): Response
     {
         $user = $request->user();
+        $canConvert = $user->can('quotes.manage') && $user->can('events.manage') && ! $quote->event()->exists();
 
         return Inertia::render('Admin/Quotes/Show', [
             'quote' => $this->quotes->detail($quote),
             'abilities' => [
                 'manage' => $user->can('quotes.manage'),
-                'convert' => $user->can('quotes.manage') && $user->can('events.manage'),
+                'convert' => $canConvert,
             ],
+            // Datos del evento prellenados desde la cotización (solo si puede convertirla).
+            'conversion' => $canConvert ? [
+                'event' => $conversion->prefill($quote),
+                'services' => $agenda->serviceOptions(),
+            ] : null,
         ]);
     }
 

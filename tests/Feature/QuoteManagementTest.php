@@ -163,4 +163,99 @@ class QuoteManagementTest extends TestCase
         $this->actingAs($partner)->get("/admin/cotizaciones/{$quote->id}")->assertForbidden();
         $this->actingAs($partner)->get("/admin/cotizaciones/{$quote->id}/pdf")->assertForbidden();
     }
+
+    // ------------------------------------------------------------- Conversión a evento
+
+    private function conversionPayload(array $prefill, array $overrides = []): array
+    {
+        return [...$prefill, 'deposit_paid' => 5000, ...$overrides];
+    }
+
+    public function test_prellenado_del_evento_desde_la_cotizacion(): void
+    {
+        $band = $this->catalogService(28500, overrides: ['extra_hour_price' => 4500]);
+        $dancefloor = $this->catalogService(5500, capacity: 2);
+        $quote = $this->makeQuote([[$band, 1, 2], [$dancefloor, 2]], ['total' => 46000]);
+
+        $this->actingAs($this->sales)->get("/admin/cotizaciones/{$quote->id}")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('conversion.event.title', 'Boda — Hacienda San Gabriel')
+                ->where('conversion.event.agreed_total', '46000.00')
+                ->where('conversion.event.start_time', '18:00')
+                ->where('conversion.event.services', [
+                    ['service_id' => $band->id, 'quantity' => 1],
+                    ['service_id' => $dancefloor->id, 'quantity' => 2],
+                ]));
+    }
+
+    public function test_confirmar_crea_evento_con_partidas_y_marca_la_cotizacion(): void
+    {
+        $band = $this->catalogService(28500, capacity: 1, overrides: ['extra_hour_price' => 4500]);
+        $dancefloor = $this->catalogService(5500, capacity: 2);
+        $quote = $this->makeQuote([[$band, 1, 2], [$dancefloor, 2]]);
+        $prefill = app(\App\Services\QuoteConversionService::class)->prefill($quote);
+
+        $this->actingAs($this->sales)->post("/admin/cotizaciones/{$quote->id}/convertir", $this->conversionPayload($prefill))
+            ->assertRedirect("/admin/cotizaciones/{$quote->id}")
+            ->assertSessionHas('success');
+
+        $quote->refresh();
+        $event = $quote->event()->with('services')->firstOrFail();
+        $this->assertSame('confirmed', $quote->status);
+        $this->assertSame('reserved', $event->status);
+        $this->assertSame($quote->event_date->toDateString(), $event->event_date->toDateString());
+        $this->assertSame('5000.00', $event->deposit_paid);
+        $this->assertSame([$band->id => 1, $dancefloor->id => 2], $event->services->mapWithKeys(fn ($s) => [$s->id => $s->pivot->quantity])->all());
+
+        // La fecha ya descuenta capacidad para el cotizador público.
+        $this->getJson('/api/availability?date='.$quote->event_date->toDateString())
+            ->assertJsonFragment(['id' => $band->id, 'remaining' => 0, 'available' => false]);
+    }
+
+    public function test_alerta_de_sobrecupo_al_confirmar_y_confirmacion_administrativa(): void
+    {
+        $band = $this->catalogService(28500, capacity: 1, overrides: ['name' => 'Grupo Versátil']);
+        $quote = $this->makeQuote([[$band, 1]]);
+        $this->reserve($band, $quote->event_date->toDateString());
+        $prefill = app(\App\Services\QuoteConversionService::class)->prefill($quote);
+
+        $this->actingAs($this->sales)->post("/admin/cotizaciones/{$quote->id}/convertir", $this->conversionPayload($prefill))
+            ->assertSessionHasErrors('overbooking');
+        $this->assertSame('new', $quote->fresh()->status);
+        $this->assertFalse($quote->event()->exists());
+
+        $this->actingAs($this->sales)->post("/admin/cotizaciones/{$quote->id}/convertir", $this->conversionPayload($prefill, ['force_overbooking' => true]))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('confirmed', $quote->fresh()->status);
+    }
+
+    public function test_no_se_convierte_dos_veces(): void
+    {
+        $quote = $this->makeQuote([[$this->catalogService(1000, capacity: 5), 1]]);
+        $prefill = app(\App\Services\QuoteConversionService::class)->prefill($quote);
+
+        $payload = $this->conversionPayload($prefill, ['deposit_paid' => 0]);
+        $this->actingAs($this->sales)->post("/admin/cotizaciones/{$quote->id}/convertir", $payload)->assertSessionHasNoErrors();
+        $this->actingAs($this->sales)->post("/admin/cotizaciones/{$quote->id}/convertir", $payload)
+            ->assertSessionHas('error');
+
+        $this->assertSame(1, \App\Models\Event::count());
+        $this->actingAs($this->sales)->get("/admin/cotizaciones/{$quote->id}")
+            ->assertInertia(fn (Assert $page) => $page->where('abilities.convert', false)->where('conversion', null)->has('quote.event'));
+    }
+
+    public function test_convertir_requiere_tambien_events_manage(): void
+    {
+        $role = Role::create(['name' => 'Ventas sin agenda', 'slug' => 'ventas-sin-agenda']);
+        $role->permissions()->attach(Permission::whereIn('key', ['quotes.view', 'quotes.manage'])->pluck('id'));
+        $seller = User::factory()->create(['role_id' => $role->id]);
+        $quote = $this->makeQuote([[$this->catalogService(1000), 1]]);
+        $prefill = app(\App\Services\QuoteConversionService::class)->prefill($quote);
+
+        $this->actingAs($seller)->get("/admin/cotizaciones/{$quote->id}")
+            ->assertInertia(fn (Assert $page) => $page->where('abilities.convert', false)->where('conversion', null));
+
+        $this->actingAs($seller)->post("/admin/cotizaciones/{$quote->id}/convertir", $this->conversionPayload($prefill))->assertForbidden();
+        $this->assertFalse($quote->event()->exists());
+    }
 }

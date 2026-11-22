@@ -87,6 +87,10 @@ trait BuildsQuoteFixtures
         }
 
         $quote = Quote::create([
+            'coverage_zone_id' => CoverageZone::firstOrCreate(
+                ['city_name' => 'Toluca / Metepec'],
+                ['zone_type' => CoverageZone::TYPE_LOCAL_HQ, 'travel_fee_type' => 'fixed', 'travel_fee_value' => 0, 'is_active' => true]
+            )->id,
             'folio' => sprintf('COT-2026-%04d', 9000 + $sequence),
             'client_name' => 'Ana López',
             'client_email' => 'ana@ejemplo.mx',

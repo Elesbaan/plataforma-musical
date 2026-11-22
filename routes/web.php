@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\MediaChunkController;
 use App\Http\Controllers\Admin\QuoteAdminController;
+use App\Http\Controllers\Admin\QuoteConversionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\ServiceMediaController;
@@ -104,6 +105,7 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
             Route::patch('/{quote}/estatus', [QuoteAdminController::class, 'updateStatus'])->name('status');
             Route::patch('/{quote}/notas', [QuoteAdminController::class, 'updateNotes'])->name('notes');
             Route::post('/{quote}/reenviar', [QuoteAdminController::class, 'resend'])->middleware('throttle:10,1')->name('resend');
+            Route::post('/{quote}/convertir', QuoteConversionController::class)->middleware('can:events.manage')->name('convert');
         });
     });
 
