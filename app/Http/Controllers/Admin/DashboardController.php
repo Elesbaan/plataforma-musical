@@ -3,16 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\DashboardService;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
     /**
-     * Punto de entrada del panel. Las métricas completas se integran en la Fase 5.
+     * Dashboard operativo con métricas según los permisos del usuario.
      */
-    public function __invoke(): Response
+    public function __invoke(Request $request, DashboardService $dashboard): Response
     {
-        return Inertia::render('Admin/Dashboard');
+        return Inertia::render('Admin/Dashboard', [
+            ...$dashboard->forUser($request->user()),
+            'today' => today()->toDateString(),
+        ]);
     }
 }
