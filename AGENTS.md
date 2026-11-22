@@ -177,3 +177,12 @@ Dado que el proyecto se desplegará en un entorno compartido (Ferozo / DonWeb) d
 5. **Correos:** un fallo de envío nunca debe impedir guardar la cotización ni generar su PDF (se registra en el log). Los correos se envían con `Mail` y deben probarse con `Mail::fake()`.
 6. **Configuración del cotizador:** tipos de evento, límites de cantidad/horas extra y prefijo del folio viven en `config/quotes.php` (se validan en backend). La zona horaria oficial es `America/Mexico_City` (afecta folio anual, vigencia y fecha mínima).
 7. **PDF con DomPDF:** maquetar con tablas (sin flex/grid), fuente `DejaVu Sans` (acentos), sin recursos remotos (`isRemoteEnabled=false`); el logo se incrusta como data URI (WebP se convierte a PNG).
+
+---
+
+## 12. CRM, Agenda y Datos Financieros — OBLIGATORIO
+
+1. **Alcance de la agenda:** `App\Services\AgendaService` es el único punto para consultar eventos en el panel. Con `events.view_all` o `events.manage` se ve todo; con `events.view_own` solo eventos donde participa un servicio vinculado (`service_user`), **sin** montos (acordado, anticipo, saldo), datos del cliente, notas internas ni servicios ajenos. Nunca envíes esos campos al frontend para quien no los puede ver (ocultarlos en React no basta); las pruebas deben usar `->missing(...)`.
+2. **Capacidad diaria:** las alertas de capacidad (alcanza = aviso, supera = sobrecupo) salen de `AvailabilityService::conflicts()` / `saturatedDays()`. Crear, editar o convertir un evento reservado con sobrecupo exige confirmación explícita (`force_overbooking`). Al editar, el evento no cuenta contra sí mismo.
+3. **Conversión de cotizaciones:** solo `QuoteConversionService` crea eventos desde cotizaciones (requiere `quotes.manage` y `events.manage`). Copia únicamente las partidas `line_type = service` (las horas extra no ocupan capacidad) y marca la cotización como confirmada. El estatus “Confirmada” no se asigna manualmente sin evento.
+4. **Dashboard:** `DashboardService` calcula cada bloque solo si el usuario tiene el permiso correspondiente; no agregues métricas sin esa verificación.
