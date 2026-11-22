@@ -154,3 +154,14 @@ Dado que el proyecto se desplegará en un entorno compartido (Ferozo / DonWeb) d
 
 ### Idioma de Validación
 - `APP_LOCALE=es`. Los mensajes y nombres de campos viven en `lang/es/validation.php`; al crear un campo nuevo en un `FormRequest`, agrega su nombre legible en `attributes`.
+
+---
+
+## 10. Perfiles, Permisos y Alcance Propio (RBAC) — OBLIGATORIO
+
+1. **Fuente única de permisos:** `config/permissions.php` define módulos, claves de permiso y perfiles base. Para agregar un permiso: añádelo ahí, ejecuta `php artisan permissions:sync` (idempotente; también corre en la migración RBAC y en el `DatabaseSeeder`) y regenera el SQL maestro. Nunca escribas claves de permiso “sueltas” que no existan en el catálogo.
+2. **Perfiles base (`is_system`):** Super Administrador (todos los permisos, siempre, vía `Gate::before`), Coordinador de Ventas y Proveedor Aliado. No se eliminan; sus permisos (salvo el Super Administrador) se ajustan desde la matriz del panel. Un perfil con usuarios asignados no se puede eliminar.
+3. **Protección en backend (obligatoria):** cada ruta del panel exige su permiso con `can:<clave>` o una Policy (`can:update,service`). Ocultar opciones en React (`usePermissions`, `auth.permissions`) es solo presentación y nunca sustituye la verificación del backend. Usuarios inactivos (`is_active = false`) no inician sesión, son expulsados por el middleware `active` y no tienen ningún permiso.
+4. **Alcance propio (`*_own`):** se limita a los servicios vinculados en `service_user`. `App\Policies\ServicePolicy` distingue `update` (servicio propio o `catalog.manage_all`) de `managePricing` (solo `catalog.manage_all`). Con alcance propio solo se editan descripciones, características, capacidad diaria y galería; los campos de `ServiceRequest::RESTRICTED_FIELDS` (precio, nombre, categoría, tipo, publicación, orden) están prohibidos y responden con error de validación. Cualquier listado o acción nueva sobre servicios, eventos o cotizaciones con permisos `*_own` debe filtrar por los servicios vinculados del usuario.
+5. **Salvaguardas de usuarios:** nadie puede desactivarse, cambiar su propio perfil ni eliminarse, y siempre debe quedar al menos un Super Administrador activo (`UserAdminService`).
+6. **Pruebas:** toda ruta nueva del panel debe tener una prueba que confirme el `403` para un perfil sin el permiso correspondiente (ver `RolePermissionTest` y `AccessControlTest`). En pruebas, crea usuarios con `User::factory()->superAdmin()` o `->withRole(Role::PARTNER)`.
