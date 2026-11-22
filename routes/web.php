@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PublicPageController;
 use App\Http\Controllers\PublicServiceController;
 use App\Http\Controllers\QuoteApiController;
+use App\Http\Controllers\QuoteController;
 use App\Models\Service;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,14 @@ Route::get('/aviso-de-privacidad', [PublicPageController::class, 'privacy'])->na
 Route::get('/servicios', [PublicServiceController::class, 'index'])->name('services.index');
 Route::get('/servicios/{slug}', [PublicServiceController::class, 'show'])->name('services.show');
 Route::redirect('/paquetes', '/servicios?destacados=1')->name('packages');
+
+// Cotizador en línea
+Route::get('/cotizador', [QuoteController::class, 'create'])->name('quotes.create');
+Route::post('/cotizador', [QuoteController::class, 'store'])->middleware('throttle:10,1')->name('quotes.store');
+Route::middleware('signed')->group(function () {
+    Route::get('/cotizacion/{folio}', [QuoteController::class, 'show'])->name('quotes.show');
+    Route::get('/cotizacion/{folio}/pdf', [QuoteController::class, 'download'])->name('quotes.pdf');
+});
 
 // API del cotizador (JSON, con límite de peticiones por IP)
 Route::prefix('api')->name('api.')->group(function () {

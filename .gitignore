@@ -27,3 +27,5 @@ yarn-error.log
 /public/uploads/**
 !/public/uploads/**/
 !/public/uploads/**/.gitkeep
+!/public/uploads/**/.htaccess
+!/public/uploads/.htaccess

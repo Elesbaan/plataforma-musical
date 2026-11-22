@@ -22,6 +22,9 @@ class UploadService
 
     public const DIR_SERVICE_VIDEOS = 'services/videos';
 
+    /** PDF de cotizaciones (acceso directo bloqueado; descarga por URL firmada). */
+    public const DIR_QUOTES = 'quotes';
+
     /** Ancho máximo de las fotos optimizadas. */
     private const MAX_IMAGE_WIDTH = 1920;
 

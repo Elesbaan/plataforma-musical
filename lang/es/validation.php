@@ -87,6 +87,21 @@ return [
         'sort_order' => 'el orden',
         'is_active' => 'el estado',
 
+        // Cotizador
+        'client_name' => 'tu nombre completo',
+        'client_email' => 'tu correo electrónico',
+        'client_phone' => 'tu teléfono o WhatsApp',
+        'event_date' => 'la fecha del evento',
+        'event_time' => 'la hora estimada',
+        'event_type' => 'el tipo de evento',
+        'venue_name' => 'el nombre del salón o lugar',
+        'coverage_zone_id' => 'la ciudad o zona',
+        'custom_city_name' => 'la ciudad del evento',
+        'items' => 'los servicios',
+        'items.*.quantity' => 'la cantidad',
+        'items.*.extra_hours' => 'las horas extra',
+        'accept_privacy' => 'el aviso de privacidad',
+
         // Usuarios y perfiles
         'role_id' => 'el perfil',
         'service_ids' => 'los servicios vinculados',

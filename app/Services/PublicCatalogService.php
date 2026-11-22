@@ -46,6 +46,32 @@ class PublicCatalogService
     }
 
     /**
+     * Servicios cotizables agrupados por categoría (cotizador en línea).
+     *
+     * @return list<array{category: array<string, mixed>, services: list<array<string, mixed>>}>
+     */
+    public function quotableServices(): array
+    {
+        return $this->visible()
+            ->with($this->cardRelations())
+            ->withExists($this->videoExists())
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('category_id')
+            ->sortBy(fn ($items) => [$items->first()->category->sort_order, $items->first()->category->name])
+            ->map(fn ($items) => [
+                'category' => $items->first()->category->only(['id', 'name', 'slug', 'icon']),
+                'services' => $items->map(fn (Service $service) => [
+                    ...$this->card($service),
+                    'daily_capacity' => $service->daily_capacity,
+                ])->values()->all(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
      * Datos de la propuesta de valor (todo desde la base de datos).
      *
      * @return array<string, mixed>
