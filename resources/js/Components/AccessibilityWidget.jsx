@@ -15,7 +15,7 @@ import {
  * Panel flotante de accesibilidad (esquina inferior izquierda).
  * La esquina inferior derecha queda reservada para el botón de WhatsApp.
  */
-export default function AccessibilityWidget() {
+export default function AccessibilityWidget({ raised = false }) {
     const [open, setOpen] = useState(false);
     const [prefs, setPrefs] = useState(defaultPreferences);
     const panelId = useId();
@@ -70,7 +70,7 @@ export default function AccessibilityWidget() {
     const theme = resolvedTheme(prefs);
 
     return (
-        <div className="fixed bottom-4 left-4 z-50 sm:bottom-6 sm:left-6">
+        <div className={`fixed left-4 z-50 sm:left-6 ${raised ? 'bottom-24 lg:bottom-6' : 'bottom-4 sm:bottom-6'}`}>
             {open && (
                 <div
                     ref={panelRef}

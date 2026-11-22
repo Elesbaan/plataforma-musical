@@ -44,8 +44,9 @@ function NavLink({ item, className, onClick }) {
  * @param {{ transparentHeader?: boolean, children: React.ReactNode }} props
  *   transparentHeader: el encabezado inicia transparente sobre un hero oscuro y
  *   se vuelve sólido al desplazarse.
+ *   raiseFloating: eleva los botones flotantes en móvil (páginas con barra inferior fija).
  */
-export default function PublicLayout({ transparentHeader = false, children }) {
+export default function PublicLayout({ transparentHeader = false, raiseFloating = false, children }) {
     const { siteSettings, flash } = usePage().props;
     const [menuOpen, setMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
@@ -261,8 +262,8 @@ export default function PublicLayout({ transparentHeader = false, children }) {
                 </div>
             </footer>
 
-            <AccessibilityWidget />
-            <WhatsAppButton />
+            <AccessibilityWidget raised={raiseFloating} />
+            <WhatsAppButton raised={raiseFloating} />
         </div>
     );
 }

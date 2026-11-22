@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PublicPageController;
+use App\Http\Controllers\PublicServiceController;
 use App\Http\Controllers\QuoteApiController;
 use App\Models\Service;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,9 @@ use Illuminate\Support\Facades\Route;
 // Sitio público
 Route::get('/', [PublicPageController::class, 'home'])->name('home');
 Route::get('/aviso-de-privacidad', [PublicPageController::class, 'privacy'])->name('privacy');
+Route::get('/servicios', [PublicServiceController::class, 'index'])->name('services.index');
+Route::get('/servicios/{slug}', [PublicServiceController::class, 'show'])->name('services.show');
+Route::redirect('/paquetes', '/servicios?destacados=1')->name('packages');
 
 // API del cotizador (JSON, con límite de peticiones por IP)
 Route::prefix('api')->name('api.')->group(function () {
