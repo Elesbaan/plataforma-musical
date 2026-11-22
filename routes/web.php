@@ -11,12 +11,19 @@ use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PublicPageController;
+use App\Http\Controllers\QuoteApiController;
 use App\Models\Service;
 use Illuminate\Support\Facades\Route;
 
 // Sitio público
 Route::get('/', [PublicPageController::class, 'home'])->name('home');
 Route::get('/aviso-de-privacidad', [PublicPageController::class, 'privacy'])->name('privacy');
+
+// API del cotizador (JSON, con límite de peticiones por IP)
+Route::prefix('api')->name('api.')->group(function () {
+    Route::get('/availability', [QuoteApiController::class, 'availability'])->middleware('throttle:60,1')->name('availability');
+    Route::post('/cotizador/calcular', [QuoteApiController::class, 'preview'])->middleware('throttle:120,1')->name('quote.preview');
+});
 
 // Acceso al panel (disponible en /admin/login y en /login)
 Route::middleware('guest')->group(function () {

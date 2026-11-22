@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Event extends Model
 {
+    /** Solo los eventos reservados descuentan capacidad diaria. */
+    public const STATUS_RESERVED = 'reserved';
+
+    public const STATUS_COMPLETED = 'completed';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
     protected $guarded = [];
 
     protected function casts(): array
