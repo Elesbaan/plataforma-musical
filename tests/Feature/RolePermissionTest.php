@@ -266,4 +266,80 @@ class RolePermissionTest extends TestCase
 
         $this->assertSame('9500.00', $this->foreign->fresh()->base_price);
     }
+
+    // ------------------------------------------------------------- Agenda (events.view_own)
+
+    private function eventWith(array $services, string $date, array $overrides = []): \App\Models\Event
+    {
+        $event = \App\Models\Event::create([
+            'title' => 'Boda — Hacienda', 'event_date' => $date, 'start_time' => '18:00', 'city_name' => 'Metepec',
+            'venue_name' => 'Hacienda', 'client_name' => 'Cliente Privado', 'client_phone' => '7220000000',
+            'agreed_total' => 50000, 'deposit_paid' => 20000, 'status' => 'reserved', 'internal_notes' => 'Nota interna',
+            ...$overrides,
+        ]);
+        foreach ($services as $service) {
+            $event->services()->attach($service->id, ['quantity' => 1]);
+        }
+
+        return $event;
+    }
+
+    public function test_proveedor_solo_ve_eventos_con_sus_servicios_sin_datos_financieros(): void
+    {
+        $date = now()->addDays(10)->toDateString();
+        $shared = $this->eventWith([$this->own, $this->foreign], $date);
+        $this->eventWith([$this->foreign], $date, ['title' => 'Evento ajeno']);
+
+        $this->actingAs($this->partner)->get('/admin/agenda?mes='.substr($date, 0, 7))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('abilities.manage', false)
+                ->where('abilities.financials', false)
+                ->has('events', 1)
+                ->where('events.0.id', $shared->id)
+                ->where('events.0.is_full_view', false)
+                ->has('events.0.services', 1)
+                ->where('events.0.services.0.id', $this->own->id)
+                ->missing('events.0.agreed_total')
+                ->missing('events.0.deposit_paid')
+                ->missing('events.0.balance')
+                ->missing('events.0.client_name')
+                ->missing('events.0.client_phone')
+                ->missing('events.0.internal_notes')
+                ->has('upcoming', 1));
+    }
+
+    public function test_proveedor_ve_el_detalle_operativo_de_su_evento_pero_no_el_ajeno(): void
+    {
+        $date = now()->addDays(10)->toDateString();
+        $mine = $this->eventWith([$this->own, $this->foreign], $date);
+        $foreignEvent = $this->eventWith([$this->foreign], $date);
+
+        $this->actingAs($this->partner)->get("/admin/agenda/{$mine->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('event.city_name', 'Metepec')
+                ->where('event.start_time', '18:00')
+                ->where('abilities.manage', false)
+                ->has('event.services', 1)
+                ->missing('event.agreed_total')
+                ->missing('event.client_name'));
+
+        $this->actingAs($this->partner)->get("/admin/agenda/{$foreignEvent->id}")->assertForbidden();
+    }
+
+    public function test_alertas_de_capacidad_del_proveedor_solo_de_sus_servicios(): void
+    {
+        $date = now()->addDays(10)->toDateString();
+        $this->foreign->update(['daily_capacity' => 1]);
+        $this->eventWith([$this->foreign], $date);
+
+        $this->actingAs($this->partner)->get('/admin/agenda?mes='.substr($date, 0, 7))
+            ->assertInertia(fn (Assert $page) => $page->where('saturatedDays', []));
+    }
+
+    public function test_proveedor_no_accede_a_cotizaciones(): void
+    {
+        $this->actingAs($this->partner)->get('/admin/cotizaciones')->assertForbidden();
+    }
 }

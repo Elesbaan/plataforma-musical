@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CoverageZoneController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\MediaChunkController;
 use App\Http\Controllers\Admin\QuoteAdminController;
 use App\Http\Controllers\Admin\RoleController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\PublicPageController;
 use App\Http\Controllers\PublicServiceController;
 use App\Http\Controllers\QuoteApiController;
 use App\Http\Controllers\QuoteController;
+use App\Models\Event;
 use App\Models\Service;
 use Illuminate\Support\Facades\Route;
 
@@ -103,6 +105,18 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
             Route::patch('/{quote}/notas', [QuoteAdminController::class, 'updateNotes'])->name('notes');
             Route::post('/{quote}/reenviar', [QuoteAdminController::class, 'resend'])->middleware('throttle:10,1')->name('resend');
         });
+    });
+
+    // Agenda multi-evento (EventPolicy: toda la agenda, solo eventos propios o gestión)
+    Route::prefix('agenda')->name('events.')->middleware('can:viewAny,'.Event::class)->group(function () {
+        Route::get('/', [EventController::class, 'index'])->name('index');
+        Route::get('/crear', [EventController::class, 'create'])->middleware('can:create,'.Event::class)->name('create');
+        Route::post('/', [EventController::class, 'store'])->middleware('can:create,'.Event::class)->name('store');
+        Route::get('/capacidad', [EventController::class, 'capacity'])->middleware('can:create,'.Event::class)->name('capacity');
+        Route::get('/{event}', [EventController::class, 'show'])->whereNumber('event')->middleware('can:view,event')->name('show');
+        Route::get('/{event}/editar', [EventController::class, 'edit'])->middleware('can:update,event')->name('edit');
+        Route::put('/{event}', [EventController::class, 'update'])->middleware('can:update,event')->name('update');
+        Route::delete('/{event}', [EventController::class, 'destroy'])->middleware('can:delete,event')->name('destroy');
     });
 
     // Perfiles y matriz de permisos
