@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CoverageZoneController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PublicPageController;
@@ -34,4 +36,15 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         ->parameters(['zonas' => 'zone'])
         ->only(['index', 'store', 'update', 'destroy'])
         ->names('zones');
+
+    // Catálogo: categorías y servicios
+    Route::resource('categorias', CategoryController::class)
+        ->parameters(['categorias' => 'category'])
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->names('categories');
+
+    Route::resource('servicios', ServiceController::class)
+        ->parameters(['servicios' => 'service'])
+        ->except(['show'])
+        ->names('services');
 });
