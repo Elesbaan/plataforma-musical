@@ -24,6 +24,7 @@ Cuando dos fuentes entren en conflicto, aplica este orden estricto:
 1. **Entorno 100% PHP en Producción:** No usar procesos Node.js persistentes (`ssr` de Inertia desactivado), ni Redis, ni Horizon, ni Docker. Las colas (`QUEUE_CONNECTION`) deben funcionar de forma síncrona (`sync`) o mediante base de datos (`database`) procesable vía Cron Job estándar (`php artisan schedule:run`).
 2. **Assets Compilados:** El frontend en React se compila con Vite (`npm run build`) hacia `public/build/`. Toda dependencia de iconos (`lucide-react`), fuentes o librerías UI debe instalarse vía `npm` (prohibido depender de CDNs externos que puedan fallar o bloquearse).
 3. **Subida de Videos por Bloques (Chunked Upload):** Nunca procesar videos en un solo `POST` monolítico. Mantener estrictamente el flujo por fragmentos (`/admin/media/upload-chunk`) con ensamblado en backend y limpieza de temporales para esquivar límites de `upload_max_filesize` y `post_max_size`.
+4. **Archivos Públicos sin Symlinks:** Prohibido depender de `php artisan storage:link`. Todo archivo público subido (logos, favicon, fotos y videos ensamblados) se guarda en `public/uploads/...` mediante el disco `uploads` y `App\Services\UploadService` (ver sección 9).
 
 ---
 
@@ -112,6 +113,8 @@ Al finalizar cada instrucción o fase, entrega un resumen breve con evidencia re
 
 Dado que el proyecto se desplegará en un entorno compartido (Ferozo / DonWeb) donde la base de datos inicial se importa vía phpMyAdmin o cliente MySQL estándar, **debes mantener siempre actualizado un único archivo SQL maestro** en `database/production_schema.sql`.
 
+> **Generación automática:** el archivo se regenera con `php artisan db:export-production-sql` (a partir de las migraciones y el `DatabaseSeeder`). No lo edites a mano: la prueba `ProductionSchemaSqlTest` falla si queda desincronizado.
+
 ### Reglas Estrictas del Archivo SQL Maestro
 1. **Sincronización Continua con Migraciones y Seeders:**
    - Cada vez que crees o modifiques una migración o un seeder de catálogos iniciales, debes actualizar inmediatamente `database/production_schema.sql` en el mismo commit.
@@ -130,3 +133,24 @@ Dado que el proyecto se desplegará en un entorno compartido (Ferozo / DonWeb) d
      - Categorías base en `categories` y servicios de muestra en `services` con sus `service_features` para que el sitio y el cotizador funcionen desde el primer segundo tras importar el `.sql`.
 5. **Verificación en el Checklist de Cierre:**
    - Ninguna tarea que toque base de datos se considera terminada si `database/production_schema.sql` no refleja exactamente el estado actual de las tablas y catálogos.
+
+---
+
+## 9. Sesión del Panel y Almacenamiento de Archivos (OBLIGATORIO)
+
+### Sesión y Acceso Administrativo
+1. **Acceso:** el login responde en `/admin/login` y en `/login`. No existe la opción “Mantener sesión iniciada” (`remember`): está prohibido reintroducirla.
+2. **Expiración:** `SESSION_LIFETIME=30` (minutos de inactividad) y `SESSION_EXPIRE_ON_CLOSE=true` (la sesión termina al cerrar el navegador). Los valores por defecto en `config/session.php` son los mismos.
+3. **Temporizador de inactividad:** `AdminLayout.jsx` usa `useIdleLogout`, que toma la duración de `auth.sessionLifetime` (compartida por `HandleInertiaRequests`), muestra `<IdleSessionWarning />` 60 segundos antes y cierra la sesión con `reason=inactivity`. La actividad real envía como máximo un `POST /admin/session/keep-alive` por minuto. Nunca hardcodees la duración en el frontend.
+4. **Sesión o CSRF expirado (419):** se redirige al login con un mensaje claro (`bootstrap/app.php`); las peticiones JSON reciben `419` con mensaje en español.
+5. **Formulario de acceso:** mantener el botón de mostrar/ocultar contraseña con `aria-label` dinámico y el límite de 5 intentos de `LoginRequest`.
+
+### Almacenamiento para Hosting Compartido (sin `storage:link`)
+1. **Disco `uploads`:** raíz en `public/uploads` (`config/filesystems.php`). Carpetas: `branding/` (logos y favicon), `services/images/` (fotos optimizadas a WebP, máximo 1920 px) y `services/videos/` (videos ensamblados).
+2. **Acceso único vía `App\Services\UploadService`:** guardar (`store`, `storeOptimizedImage`), eliminar (`delete`) y generar URLs (`UploadService::url()`, basado en `asset()` para funcionar en subcarpetas). Prohibido usar el disco `public` o `Storage::url()` para archivos subidos.
+3. **Git:** los archivos subidos están ignorados (`/public/uploads/**`); solo se versionan las carpetas mediante `.gitkeep`.
+4. **Fragmentos de video:** se guardan en el disco privado `chunks` (`storage/app/chunks/{uploadId}`), se eliminan al ensamblar y el comando programado `media:clean-chunks` borra los fragmentos abandonados (requiere el Cron `php artisan schedule:run`).
+5. **Reemplazo y borrado:** al reemplazar o eliminar un archivo (logo, foto, video) se borra también el archivo físico anterior para no acumular basura en el hosting.
+
+### Idioma de Validación
+- `APP_LOCALE=es`. Los mensajes y nombres de campos viven en `lang/es/validation.php`; al crear un campo nuevo en un `FormRequest`, agrega su nombre legible en `attributes`.

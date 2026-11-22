@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Services\UploadService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 
 class SiteSetting extends Model
 {
@@ -71,21 +71,16 @@ class SiteSetting extends Model
 
     public function getLogoLightUrlAttribute(): ?string
     {
-        return $this->publicUrl($this->logo_light_path);
+        return UploadService::url($this->logo_light_path);
     }
 
     public function getLogoDarkUrlAttribute(): ?string
     {
-        return $this->publicUrl($this->logo_dark_path);
+        return UploadService::url($this->logo_dark_path);
     }
 
     public function getFaviconUrlAttribute(): ?string
     {
-        return $this->publicUrl($this->favicon_path);
-    }
-
-    private function publicUrl(?string $path): ?string
-    {
-        return $path ? Storage::disk('public')->url($path) : null;
+        return UploadService::url($this->favicon_path);
     }
 }

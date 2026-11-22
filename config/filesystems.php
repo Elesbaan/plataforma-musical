@@ -38,6 +38,25 @@ return [
             'report' => false,
         ],
 
+        // Archivos públicos subidos desde el panel (logos, favicon, fotos y videos).
+        // Viven dentro de public/ para no depender de `storage:link` (hosting compartido).
+        'uploads' => [
+            'driver' => 'local',
+            'root' => public_path('uploads'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/uploads',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // Fragmentos temporales de la subida de videos por bloques (privados).
+        'chunks' => [
+            'driver' => 'local',
+            'root' => storage_path('app/chunks'),
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
