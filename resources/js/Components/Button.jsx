@@ -6,9 +6,11 @@ const VARIANTS = {
     outline: 'border border-line text-ink hover:bg-surface-sunken',
     ghost: 'text-ink hover:bg-surface-sunken',
     light: 'border border-white/40 text-white hover:bg-white/10',
+    danger: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
 };
 
 const SIZES = {
+    sm: 'min-h-touch px-3 text-sm',
     md: 'min-h-touch px-5 text-sm',
     lg: 'min-h-[52px] px-7 text-base',
 };

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PublicPageController;
 use Illuminate\Support\Facades\Route;
@@ -22,4 +23,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::post('/session/keep-alive', [AuthenticatedSessionController::class, 'keepAlive'])->name('session.keep-alive');
+
+    // Identidad y marca
+    Route::get('/identidad', [SiteSettingController::class, 'edit'])->name('settings.edit');
+    Route::put('/identidad', [SiteSettingController::class, 'update'])->name('settings.update');
 });
