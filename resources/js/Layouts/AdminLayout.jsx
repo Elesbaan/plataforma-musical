@@ -13,6 +13,7 @@ import {
     PanelLeftClose,
     PanelLeftOpen,
     ShieldCheck,
+    Users,
     X,
 } from 'lucide-react';
 import BrandLogo from '@/Components/BrandLogo';
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
     { label: 'Zonas y viáticos', href: '/admin/zonas', Icon: MapPinned, permission: 'zones.manage' },
     { label: 'Cotizaciones', href: '/admin/cotizaciones', Icon: FileText, permission: 'quotes.view' },
     { label: 'Agenda de eventos', href: '/admin/agenda', Icon: CalendarDays, permission: ['events.view_all', 'events.view_own'] },
+    { label: 'Usuarios', href: '/admin/usuarios', Icon: Users, permission: 'users.manage' },
     { label: 'Perfiles y permisos', href: '/admin/perfiles', Icon: ShieldCheck, permission: 'roles.manage' },
 ];
 

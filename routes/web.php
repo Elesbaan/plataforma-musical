@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\ServiceMediaController;
 use App\Http\Controllers\Admin\SiteSettingController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PublicPageController;
 use Illuminate\Support\Facades\Route;
@@ -70,4 +71,11 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
         ->except(['show'])
         ->names('roles')
         ->middleware('can:roles.manage');
+
+    // Usuarios
+    Route::resource('usuarios', UserController::class)
+        ->parameters(['usuarios' => 'user'])
+        ->except(['show'])
+        ->names('users')
+        ->middleware('can:users.manage');
 });

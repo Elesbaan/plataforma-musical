@@ -17,6 +17,7 @@ return [
         'file' => ':Attribute debe pesar entre :min y :max kilobytes.',
     ],
     'boolean' => ':Attribute debe ser sí o no.',
+    'confirmed' => 'La confirmación de :attribute no coincide.',
     'date' => ':Attribute no es una fecha válida.',
     'date_format' => ':Attribute no tiene el formato :format.',
     'decimal' => ':Attribute debe tener :decimal decimales.',
@@ -56,6 +57,13 @@ return [
         'file' => ':Attribute debe pesar al menos :min kilobytes.',
     ],
     'numeric' => ':Attribute debe ser un número.',
+    'password' => [
+        'letters' => ':Attribute debe incluir al menos una letra.',
+        'mixed' => ':Attribute debe incluir mayúsculas y minúsculas.',
+        'numbers' => ':Attribute debe incluir al menos un número.',
+        'symbols' => ':Attribute debe incluir al menos un símbolo.',
+        'uncompromised' => ':Attribute apareció en una filtración de datos. Elige otra.',
+    ],
     'present' => ':Attribute es obligatorio.',
     'prohibited' => ':Attribute no está permitido.',
     'regex' => ':Attribute no tiene un formato válido.',
@@ -78,6 +86,13 @@ return [
         'description' => 'la descripción',
         'sort_order' => 'el orden',
         'is_active' => 'el estado',
+
+        // Usuarios y perfiles
+        'role_id' => 'el perfil',
+        'service_ids' => 'los servicios vinculados',
+        'service_ids.*' => 'el servicio vinculado',
+        'permissions' => 'los permisos',
+        'permissions.*' => 'el permiso',
 
         // Identidad y marca
         'brand_name' => 'el nombre comercial',
