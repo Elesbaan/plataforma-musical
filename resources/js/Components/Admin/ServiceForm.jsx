@@ -19,6 +19,7 @@ function initialData(service, categories) {
         service_type: service?.service_type ?? 'core_band',
         base_price: service?.base_price ?? '',
         price_unit: service?.price_unit ?? '',
+        extra_hour_price: service?.extra_hour_price ?? '',
         daily_capacity: service?.daily_capacity ?? 1,
         is_featured: service?.is_featured ?? false,
         is_active: service?.is_active ?? true,
@@ -110,6 +111,7 @@ export default function ServiceForm({ service = null, categories, restricted = f
                                 <ReadOnlyRow label="Precio base">
                                     {formatMoney(service?.base_price)} <span className="font-normal text-ink-muted">{service?.price_unit}</span>
                                 </ReadOnlyRow>
+                                <ReadOnlyRow label="Hora extra">{service?.extra_hour_price ? formatMoney(service.extra_hour_price) : 'No aplica'}</ReadOnlyRow>
                                 <ReadOnlyRow label="Publicación">{service?.is_active ? 'Activo' : 'Inactivo'}</ReadOnlyRow>
                             </dl>
                             <p className="mt-3 flex items-start gap-2 text-xs text-ink-muted">
@@ -132,6 +134,15 @@ export default function ServiceForm({ service = null, categories, restricted = f
                                     {...field('base_price')}
                                 />
                                 <TextField label="Unidad de precio" required maxLength={60} placeholder="Ej. por evento (5 hrs)" {...field('price_unit')} />
+                                <TextField
+                                    label="Tarifa por hora extra (MXN)"
+                                    type="number"
+                                    inputMode="decimal"
+                                    min="0"
+                                    step="0.01"
+                                    hint="Opcional. Déjala vacía si este servicio no ofrece horas extra."
+                                    {...field('extra_hour_price')}
+                                />
                             </div>
                         </Card>
                     )}

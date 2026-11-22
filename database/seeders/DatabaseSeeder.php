@@ -89,8 +89,11 @@ class DatabaseSeeder extends Seeder
             ['Audio, Iluminación y Show', 'Robot LED de Impacto', 'addon_extra', 7200, 'por presentación', 2, true, ['Show interactivo', 'Robot led profesional', 'Operador incluido']],
         ];
 
+        // Tarifa por hora extra (solo servicios por evento con duración definida).
+        $extraHourPrices = ['Grupo Versátil Premium' => 4500, 'Show Versátil Platinum' => 6500, 'Teclado y Voz' => 1800, 'Dúo Acústico' => 2200];
+
         foreach ($catalog as $index => [$categoryName, $name, $type, $price, $unit, $capacity, $featured, $features]) {
-            $service = Service::create(['category_id' => $createdCategories[$categoryName]->id, 'name' => $name, 'slug' => Str::slug($name), 'short_description' => 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'full_description' => 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'service_type' => $type, 'base_price' => $price, 'price_unit' => $unit, 'daily_capacity' => $capacity, 'is_featured' => $featured, 'is_active' => true, 'sort_order' => $index + 1]);
+            $service = Service::create(['extra_hour_price' => $extraHourPrices[$name] ?? null, 'category_id' => $createdCategories[$categoryName]->id, 'name' => $name, 'slug' => Str::slug($name), 'short_description' => 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'full_description' => 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'service_type' => $type, 'base_price' => $price, 'price_unit' => $unit, 'daily_capacity' => $capacity, 'is_featured' => $featured, 'is_active' => true, 'sort_order' => $index + 1]);
             foreach ($features as $featureIndex => $feature) {
                 $service->features()->create(['feature_text' => $feature, 'sort_order' => $featureIndex + 1]);
             }

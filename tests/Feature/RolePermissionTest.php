@@ -169,11 +169,13 @@ class RolePermissionTest extends TestCase
         $this->actingAs($this->partner)
             ->put("/admin/servicios/{$this->own->id}", $this->contentPayload([
                 'base_price' => 1,
+                'extra_hour_price' => 10,
                 'name' => 'Mariachi Premium',
                 'is_featured' => true,
             ]))
             ->assertSessionHasErrors([
                 'base_price' => 'No tienes permiso para modificar el precio de este servicio.',
+                'extra_hour_price',
                 'name',
                 'is_featured',
             ]);

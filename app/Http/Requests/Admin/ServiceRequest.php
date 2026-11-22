@@ -14,7 +14,7 @@ class ServiceRequest extends FormRequest
 {
     /** Campos que solo puede cambiar quien tiene catalog.manage_all. */
     public const RESTRICTED_FIELDS = [
-        'category_id', 'name', 'service_type', 'base_price', 'price_unit', 'is_featured', 'is_active', 'sort_order',
+        'category_id', 'name', 'service_type', 'base_price', 'price_unit', 'extra_hour_price', 'is_featured', 'is_active', 'sort_order',
     ];
 
     public function authorize(): bool
@@ -64,6 +64,7 @@ class ServiceRequest extends FormRequest
             'service_type' => ['required', Rule::in(Service::TYPES)],
             'base_price' => ['required', 'numeric', 'min:0', 'max:99999999'],
             'price_unit' => ['required', 'string', 'max:60'],
+            'extra_hour_price' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
             'is_featured' => ['boolean'],
             'is_active' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
@@ -79,6 +80,7 @@ class ServiceRequest extends FormRequest
             'daily_capacity.min' => 'La capacidad diaria debe ser de al menos 1 evento por fecha.',
             'base_price.prohibited' => 'No tienes permiso para modificar el precio de este servicio.',
             'price_unit.prohibited' => 'No tienes permiso para modificar la unidad de precio.',
+            'extra_hour_price.prohibited' => 'No tienes permiso para modificar la tarifa de hora extra.',
             'name.prohibited' => 'No tienes permiso para cambiar el nombre del servicio.',
             'category_id.prohibited' => 'No tienes permiso para cambiar la categoría.',
             'service_type.prohibited' => 'No tienes permiso para cambiar el tipo de servicio.',

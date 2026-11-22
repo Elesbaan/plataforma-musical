@@ -271,4 +271,17 @@ class CatalogAdminTest extends TestCase
 
         $this->assertModelExists($service);
     }
+
+    public function test_tarifa_de_hora_extra_es_opcional(): void
+    {
+        $category = $this->category();
+
+        $this->actingAs($this->admin)->post('/admin/servicios', $this->servicePayload($category, ['extra_hour_price' => '4500']))
+            ->assertSessionHasNoErrors();
+        $this->assertSame('4500.00', Service::firstWhere('name', 'Grupo Versátil Premium')->extra_hour_price);
+
+        $this->actingAs($this->admin)->post('/admin/servicios', $this->servicePayload($category, ['name' => 'Sin horas', 'extra_hour_price' => '']))
+            ->assertSessionHasNoErrors();
+        $this->assertNull(Service::firstWhere('name', 'Sin horas')->extra_hour_price);
+    }
 }

@@ -139,6 +139,7 @@ return [
         'base_price' => 'el precio base',
         'price_unit' => 'la unidad de precio',
         'daily_capacity' => 'la capacidad diaria',
+        'extra_hour_price' => 'la tarifa por hora extra',
         'features' => 'las características',
         'features.*' => 'la característica',
 

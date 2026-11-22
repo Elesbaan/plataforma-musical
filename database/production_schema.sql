@@ -153,6 +153,7 @@ CREATE TABLE `services` (
   `is_featured` tinyint(1) not null default '0',
   `is_active` tinyint(1) not null default '1',
   `sort_order` int unsigned not null default '0',
+  `extra_hour_price` decimal(10, 2) null,
   CONSTRAINT `services_category_id_foreign` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) on delete cascade,
   UNIQUE KEY `services_slug_unique` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -399,15 +400,15 @@ INSERT INTO `categories` (`id`, `name`, `slug`, `description`, `icon`, `sort_ord
 (4, 'Mariachi, Banda y Regional', 'mariachi-banda-y-regional', 'Tradición mexicana y formato regional', 'Guitar', 4, 1, NOW(), NOW()),
 (5, 'Audio, Iluminación y Show', 'audio-iluminacion-y-show', 'Producción visual y complementos', 'Sparkles', 5, 1, NOW(), NOW());
 
-INSERT INTO `services` (`id`, `created_at`, `updated_at`, `category_id`, `name`, `slug`, `short_description`, `full_description`, `service_type`, `base_price`, `price_unit`, `daily_capacity`, `is_featured`, `is_active`, `sort_order`) VALUES
-(1, NOW(), NOW(), 1, 'Grupo Versátil Premium', 'grupo-versatil-premium', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'core_band', 28500, 'por evento (5 hrs)', 1, 1, 1, 1),
-(2, NOW(), NOW(), 1, 'Show Versátil Platinum', 'show-versatil-platinum', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'core_band', 42500, 'por evento (6 hrs)', 1, 1, 1, 2),
-(3, NOW(), NOW(), 2, 'Trío de Cuerdas', 'trio-de-cuerdas', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'ceremony', 8500, 'por ceremonia', 1, 0, 1, 3),
-(4, NOW(), NOW(), 3, 'Teclado y Voz', 'teclado-y-voz', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'soloist', 6500, 'por evento (3 hrs)', 1, 1, 1, 4),
-(5, NOW(), NOW(), 3, 'Dúo Acústico', 'duo-acustico', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'soloist', 9200, 'por evento (4 hrs)', 2, 0, 1, 5),
-(6, NOW(), NOW(), 4, 'Mariachi Tradicional', 'mariachi-tradicional', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'partner_act', 4800, 'por presentación', 2, 1, 1, 6),
-(7, NOW(), NOW(), 5, 'Pista Luminosa LED', 'pista-luminosa-led', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'addon_extra', 5500, 'por pieza', 2, 1, 1, 7),
-(8, NOW(), NOW(), 5, 'Robot LED de Impacto', 'robot-led-de-impacto', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'addon_extra', 7200, 'por presentación', 2, 1, 1, 8);
+INSERT INTO `services` (`id`, `created_at`, `updated_at`, `category_id`, `name`, `slug`, `short_description`, `full_description`, `service_type`, `base_price`, `price_unit`, `daily_capacity`, `is_featured`, `is_active`, `sort_order`, `extra_hour_price`) VALUES
+(1, NOW(), NOW(), 1, 'Grupo Versátil Premium', 'grupo-versatil-premium', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'core_band', 28500, 'por evento (5 hrs)', 1, 1, 1, 1, 4500),
+(2, NOW(), NOW(), 1, 'Show Versátil Platinum', 'show-versatil-platinum', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'core_band', 42500, 'por evento (6 hrs)', 1, 1, 1, 2, 6500),
+(3, NOW(), NOW(), 2, 'Trío de Cuerdas', 'trio-de-cuerdas', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'ceremony', 8500, 'por ceremonia', 1, 0, 1, 3, NULL),
+(4, NOW(), NOW(), 3, 'Teclado y Voz', 'teclado-y-voz', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'soloist', 6500, 'por evento (3 hrs)', 1, 1, 1, 4, 1800),
+(5, NOW(), NOW(), 3, 'Dúo Acústico', 'duo-acustico', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'soloist', 9200, 'por evento (4 hrs)', 2, 0, 1, 5, 2200),
+(6, NOW(), NOW(), 4, 'Mariachi Tradicional', 'mariachi-tradicional', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'partner_act', 4800, 'por presentación', 2, 1, 1, 6, NULL),
+(7, NOW(), NOW(), 5, 'Pista Luminosa LED', 'pista-luminosa-led', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'addon_extra', 5500, 'por pieza', 2, 1, 1, 7, NULL),
+(8, NOW(), NOW(), 5, 'Robot LED de Impacto', 'robot-led-de-impacto', 'Servicio profesional diseñado para elevar la experiencia de tu evento.', 'Producción cuidadosamente coordinada, repertorio adaptable y atención profesional antes y durante tu celebración.', 'addon_extra', 7200, 'por presentación', 2, 1, 1, 8, NULL);
 
 INSERT INTO `service_features` (`id`, `service_id`, `feature_text`, `sort_order`, `created_at`, `updated_at`) VALUES
 (1, 1, 'Vocalistas y músicos profesionales', 1, NOW(), NOW()),
@@ -451,6 +452,7 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (11, '2026_11_22_023559_create_events_table', 1),
 (12, '2026_11_22_023559_create_quote_items_table', 1),
 (13, '2026_11_22_023600_create_event_services_table', 1),
-(14, '2026_11_23_000000_create_rbac_tables', 1);
+(14, '2026_11_23_000000_create_rbac_tables', 1),
+(15, '2026_11_24_000000_add_extra_hour_price_to_services_table', 1);
 
 SET FOREIGN_KEY_CHECKS = 1;

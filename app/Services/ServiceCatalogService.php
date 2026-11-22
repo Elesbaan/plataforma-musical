@@ -132,6 +132,7 @@ class ServiceCatalogService
             'service_type' => $data['service_type'],
             'base_price' => $data['base_price'],
             'price_unit' => trim($data['price_unit']),
+            'extra_hour_price' => ($data['extra_hour_price'] ?? null) === null ? null : $data['extra_hour_price'],
             'daily_capacity' => (int) $data['daily_capacity'],
             'is_featured' => (bool) ($data['is_featured'] ?? false),
             'is_active' => (bool) ($data['is_active'] ?? false),

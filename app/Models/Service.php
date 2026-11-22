@@ -13,7 +13,7 @@ class Service extends Model
 
     protected function casts(): array
     {
-        return ['base_price' => 'decimal:2', 'daily_capacity' => 'integer', 'is_featured' => 'boolean', 'is_active' => 'boolean', 'sort_order' => 'integer'];
+        return ['base_price' => 'decimal:2', 'extra_hour_price' => 'decimal:2', 'daily_capacity' => 'integer', 'is_featured' => 'boolean', 'is_active' => 'boolean', 'sort_order' => 'integer'];
     }
 
     public function category() { return $this->belongsTo(Category::class); }
