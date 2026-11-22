@@ -165,3 +165,15 @@ Dado que el proyecto se desplegará en un entorno compartido (Ferozo / DonWeb) d
 4. **Alcance propio (`*_own`):** se limita a los servicios vinculados en `service_user`. `App\Policies\ServicePolicy` distingue `update` (servicio propio o `catalog.manage_all`) de `managePricing` (solo `catalog.manage_all`). Con alcance propio solo se editan descripciones, características, capacidad diaria y galería; los campos de `ServiceRequest::RESTRICTED_FIELDS` (precio, nombre, categoría, tipo, publicación, orden) están prohibidos y responden con error de validación. Cualquier listado o acción nueva sobre servicios, eventos o cotizaciones con permisos `*_own` debe filtrar por los servicios vinculados del usuario.
 5. **Salvaguardas de usuarios:** nadie puede desactivarse, cambiar su propio perfil ni eliminarse, y siempre debe quedar al menos un Super Administrador activo (`UserAdminService`).
 6. **Pruebas:** toda ruta nueva del panel debe tener una prueba que confirme el `403` para un perfil sin el permiso correspondiente (ver `RolePermissionTest` y `AccessControlTest`). En pruebas, crea usuarios con `User::factory()->superAdmin()` o `->withRole(Role::PARTNER)`.
+
+---
+
+## 11. Cotizador Público, PDF y Datos del Cliente — OBLIGATORIO
+
+1. **Una sola fuente de cálculo:** `QuoteCalculatorService` (en centavos enteros) y `AvailabilityService` son los únicos que calculan montos y cupos. El cotizador en React no replica fórmulas: muestra el desglose de `POST /api/cotizador/calcular`. Cualquier pantalla nueva (CRM, agenda, PDF) debe reutilizar estos servicios.
+2. **Nunca confiar en el navegador:** `POST /cotizador` ignora montos enviados por el cliente, recalcula con precios de la base de datos y revalida la disponibilidad de la fecha antes de guardar.
+3. **Datos personales protegidos:** el folio `COT-YYYY-NNNN` es secuencial (adivinable). La confirmación (`/cotizacion/{folio}`) y la descarga del PDF solo funcionan con **URL firmada** (`App\Support\QuoteLinks`). Los PDF viven en `public/uploads/quotes/` con nombre aleatorio y su `.htaccess` bloquea el acceso directo; no lo elimines.
+4. **Formularios públicos:** mantener límite de peticiones (`throttle`), la trampa anti-spam (`website`) y la aceptación del aviso de privacidad (`accept_privacy`).
+5. **Correos:** un fallo de envío nunca debe impedir guardar la cotización ni generar su PDF (se registra en el log). Los correos se envían con `Mail` y deben probarse con `Mail::fake()`.
+6. **Configuración del cotizador:** tipos de evento, límites de cantidad/horas extra y prefijo del folio viven en `config/quotes.php` (se validan en backend). La zona horaria oficial es `America/Mexico_City` (afecta folio anual, vigencia y fecha mínima).
+7. **PDF con DomPDF:** maquetar con tablas (sin flex/grid), fuente `DejaVu Sans` (acentos), sin recursos remotos (`isRemoteEnabled=false`); el logo se incrusta como data URI (WebP se convierte a PNG).
