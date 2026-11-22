@@ -1,3 +1,107 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/playfair-display';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ------------------------------------------------------------------
+ * Tokens neutros (canales RGB). Los colores de marca se inyectan desde
+ * SiteSetting en app.blade.php (--color-primary, --color-secondary, --color-accent).
+ * ------------------------------------------------------------------ */
+@layer base {
+    :root {
+        --surface: 250 250 249;
+        --surface-raised: 255 255 255;
+        --surface-sunken: 241 240 238;
+        --ink: 23 23 28;
+        --ink-muted: 82 82 94;
+        --line: 226 224 220;
+        color-scheme: light;
+    }
+
+    .dark {
+        --surface: 12 12 16;
+        --surface-raised: 24 24 30;
+        --surface-sunken: 6 6 9;
+        --ink: 244 243 240;
+        --ink-muted: 168 166 178;
+        --line: 46 45 54;
+        color-scheme: dark;
+    }
+
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        overflow-x: hidden;
+    }
+
+    :focus-visible {
+        outline: 3px solid rgb(var(--color-accent-rgb));
+        outline-offset: 2px;
+    }
+}
+
+/* ------------------------------------------------------------------
+ * Preferencias del widget de accesibilidad (clases en <html>).
+ * ------------------------------------------------------------------ */
+.a11y-high-contrast {
+    --surface: 255 255 255;
+    --surface-raised: 255 255 255;
+    --surface-sunken: 255 255 255;
+    --ink: 0 0 0;
+    --ink-muted: 0 0 0;
+    --line: 0 0 0;
+}
+
+.a11y-high-contrast.dark {
+    --surface: 0 0 0;
+    --surface-raised: 0 0 0;
+    --surface-sunken: 0 0 0;
+    --ink: 255 255 255;
+    --ink-muted: 255 255 255;
+    --line: 255 255 255;
+}
+
+.a11y-high-contrast a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.a11y-grayscale {
+    filter: grayscale(100%);
+}
+
+.a11y-highlight-links a,
+.a11y-highlight-links button,
+.a11y-highlight-links [role='button'] {
+    outline: 2px dashed rgb(var(--color-accent-rgb));
+    outline-offset: 2px;
+}
+
+.a11y-highlight-links a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.a11y-reduce-motion *,
+.a11y-reduce-motion *::before,
+.a11y-reduce-motion *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}

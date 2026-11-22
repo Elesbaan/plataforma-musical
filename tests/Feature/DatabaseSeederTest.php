@@ -15,7 +15,11 @@ class DatabaseSeederTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected $seed = true;
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed();
+    }
 
     public function test_seeder_crea_administrador_con_rol_super_admin(): void
     {
