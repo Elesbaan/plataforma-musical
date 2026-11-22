@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CoverageZoneController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MediaChunkController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\ServiceMediaController;
 use App\Http\Controllers\Admin\SiteSettingController;
@@ -62,4 +63,11 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
         Route::delete('/media/{media}', [ServiceMediaController::class, 'destroy'])->name('media.destroy');
         Route::post('/media/upload-chunk', [MediaChunkController::class, 'store'])->name('media.upload-chunk');
     });
+
+    // Perfiles y matriz de permisos
+    Route::resource('perfiles', RoleController::class)
+        ->parameters(['perfiles' => 'role'])
+        ->except(['show'])
+        ->names('roles')
+        ->middleware('can:roles.manage');
 });

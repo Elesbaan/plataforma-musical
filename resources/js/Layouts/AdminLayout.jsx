@@ -12,6 +12,7 @@ import {
     Palette,
     PanelLeftClose,
     PanelLeftOpen,
+    ShieldCheck,
     X,
 } from 'lucide-react';
 import BrandLogo from '@/Components/BrandLogo';
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
     { label: 'Zonas y viáticos', href: '/admin/zonas', Icon: MapPinned, permission: 'zones.manage' },
     { label: 'Cotizaciones', href: '/admin/cotizaciones', Icon: FileText, permission: 'quotes.view' },
     { label: 'Agenda de eventos', href: '/admin/agenda', Icon: CalendarDays, permission: ['events.view_all', 'events.view_own'] },
+    { label: 'Perfiles y permisos', href: '/admin/perfiles', Icon: ShieldCheck, permission: 'roles.manage' },
 ];
 
 const COLLAPSE_KEY = 'admin_sidebar_collapsed';
