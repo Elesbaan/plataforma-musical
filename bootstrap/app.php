@@ -5,6 +5,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,5 +24,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Sesión o token CSRF expirado (419): volver al login con un mensaje claro
+        // en lugar de mostrar la pantalla de error genérica.
+        $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
+            if ($response->getStatusCode() !== 419) {
+                return $response;
+            }
+
+            if ($request->expectsJson() && ! $request->header('X-Inertia')) {
+                return response()->json(['message' => 'Tu sesión expiró. Vuelve a ingresar.'], 419);
+            }
+
+            return redirect()->route('login')->with('error', 'Tu sesión expiró. Vuelve a ingresar para continuar.');
+        });
     })->create();

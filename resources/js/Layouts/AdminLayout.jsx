@@ -16,7 +16,9 @@ import {
 } from 'lucide-react';
 import BrandLogo from '@/Components/BrandLogo';
 import FlashMessages from '@/Components/FlashMessages';
+import IdleSessionWarning from '@/Components/IdleSessionWarning';
 import ThemeToggle from '@/Components/ThemeToggle';
+import useIdleLogout from '@/hooks/useIdleLogout';
 
 /** Módulos del panel (rutas, no datos de negocio). */
 const NAV_ITEMS = [
@@ -79,6 +81,7 @@ export default function AdminLayout({ title, actions, children }) {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const drawerToggleRef = useRef(null);
     const drawerRef = useRef(null);
+    const idle = useIdleLogout(auth?.sessionLifetime);
 
     useEffect(() => setCollapsed(readCollapsed()), []);
     useEffect(() => router.on('navigate', () => setDrawerOpen(false)), []);
@@ -129,6 +132,7 @@ export default function AdminLayout({ title, actions, children }) {
     return (
         <div className="min-h-screen bg-surface-sunken text-ink">
             <Head title={title} />
+            <IdleSessionWarning secondsLeft={idle.secondsLeft} onStay={idle.stayConnected} onLogout={idle.logoutNow} />
 
             {/* Sidebar de escritorio */}
             <aside

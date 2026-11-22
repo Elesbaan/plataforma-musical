@@ -32,6 +32,8 @@ class HandleInertiaRequests extends Middleware
             'siteSettings' => fn () => $this->publicSettings(),
             'auth' => [
                 'user' => fn () => $request->user()?->only(['id', 'name', 'email', 'role']),
+                // Minutos de inactividad antes de cerrar la sesión (temporizador del panel).
+                'sessionLifetime' => fn () => $request->user() ? (int) config('session.lifetime') : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

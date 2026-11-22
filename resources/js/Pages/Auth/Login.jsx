@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
-import { Lock } from 'lucide-react';
+import { Eye, EyeOff, Lock } from 'lucide-react';
 import BrandLogo from '@/Components/BrandLogo';
 import Button from '@/Components/Button';
 import FlashMessages from '@/Components/FlashMessages';
@@ -12,8 +13,8 @@ export default function Login() {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
-        remember: false,
     });
+    const [showPassword, setShowPassword] = useState(false);
 
     const submit = (event) => {
         event.preventDefault();
@@ -75,32 +76,33 @@ export default function Login() {
                             <label htmlFor="password" className="mb-1.5 block text-sm font-medium">
                                 Contraseña
                             </label>
-                            <input
-                                id="password"
-                                type="password"
-                                autoComplete="current-password"
-                                value={data.password}
-                                onChange={(e) => setData('password', e.target.value)}
-                                className={inputClass}
-                                aria-invalid={!!errors.password}
-                                aria-describedby={errors.password ? 'password-error' : undefined}
-                            />
+                            <div className="relative">
+                                <input
+                                    id="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    autoComplete="current-password"
+                                    value={data.password}
+                                    onChange={(e) => setData('password', e.target.value)}
+                                    className={`${inputClass} pr-14`}
+                                    aria-invalid={!!errors.password}
+                                    aria-describedby={errors.password ? 'password-error' : undefined}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((value) => !value)}
+                                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                    aria-controls="password"
+                                    className="absolute inset-y-0 right-0 inline-flex min-w-touch items-center justify-center rounded-r-xl text-ink-muted hover:text-ink"
+                                >
+                                    {showPassword ? <EyeOff className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}
+                                </button>
+                            </div>
                             {errors.password && (
                                 <p id="password-error" className="mt-1.5 text-sm text-red-600 dark:text-red-400">
                                     {errors.password}
                                 </p>
                             )}
                         </div>
-
-                        <label className="flex min-h-touch cursor-pointer items-center gap-3 text-sm">
-                            <input
-                                type="checkbox"
-                                checked={data.remember}
-                                onChange={(e) => setData('remember', e.target.checked)}
-                                className="h-5 w-5 rounded border-line text-primary focus:ring-primary"
-                            />
-                            Mantener sesión iniciada
-                        </label>
 
                         <Button type="submit" size="lg" className="w-full" disabled={processing}>
                             {processing ? 'Ingresando…' : 'Ingresar'}

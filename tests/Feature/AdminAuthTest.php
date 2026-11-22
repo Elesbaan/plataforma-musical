@@ -90,4 +90,61 @@ class AdminAuthTest extends TestCase
 
         $this->assertGuest();
     }
+
+    public function test_login_tambien_responde_en_ruta_corta(): void
+    {
+        $this->get('/login')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Auth/Login'));
+
+        $user = User::factory()->create();
+
+        $this->post('/login', ['email' => $user->email, 'password' => 'password'])
+            ->assertRedirect('/admin');
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_login_no_crea_cookie_de_recordar_sesion(): void
+    {
+        $user = User::factory()->create(['remember_token' => null]);
+
+        $this->post('/admin/login', ['email' => $user->email, 'password' => 'password', 'remember' => true])
+            ->assertRedirect('/admin')
+            ->assertCookieMissing(auth()->guard('web')->getRecallerName());
+
+        $this->assertNull($user->fresh()->remember_token);
+    }
+
+    public function test_sesion_expira_al_cerrar_navegador_y_tras_30_minutos(): void
+    {
+        $this->assertTrue(config('session.expire_on_close'));
+        $this->assertSame(30, config('session.lifetime'));
+    }
+
+    public function test_panel_comparte_duracion_de_sesion_para_temporizador(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get('/admin')
+            ->assertInertia(fn (Assert $page) => $page->where('auth.sessionLifetime', 30));
+    }
+
+    public function test_keep_alive_requiere_sesion_y_responde_sin_contenido(): void
+    {
+        $this->postJson('/admin/session/keep-alive')->assertUnauthorized();
+
+        $this->actingAs(User::factory()->create())
+            ->post('/admin/session/keep-alive')
+            ->assertNoContent();
+    }
+
+    public function test_cierre_por_inactividad_muestra_aviso(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->post('/admin/logout', ['reason' => 'inactivity'])
+            ->assertRedirect('/admin/login')
+            ->assertSessionHas('error', 'Tu sesión se cerró por inactividad. Vuelve a ingresar para continuar.');
+
+        $this->assertGuest();
+    }
 }
