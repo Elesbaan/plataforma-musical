@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\CoverageZone;
+use App\Models\Role;
+use App\Services\AccessControlService;
 use App\Models\Service;
 use App\Models\SiteSetting;
 use App\Models\User;
@@ -39,12 +41,16 @@ class DatabaseSeeder extends Seeder
             'hero_subtitle' => 'Producción musical profesional para bodas, XV años y eventos corporativos.',
         ]);
 
+        // Permisos y perfiles base (idempotente; la migración RBAC también lo ejecuta).
+        app(AccessControlService::class)->syncCatalog();
+
         // Sin factory: Faker es dependencia de desarrollo y no existe en producción (--no-dev).
         $admin = User::create([
             'name' => 'Administrador',
             'email' => 'admin@colectivomusical.mx',
             'password' => Hash::make('password'),
-            'role' => 'super_admin',
+            'role_id' => Role::where('slug', Role::SUPER_ADMIN)->value('id'),
+            'is_active' => true,
         ]);
         $admin->forceFill(['email_verified_at' => now()])->save();
 

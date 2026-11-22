@@ -26,7 +26,7 @@ class DatabaseSeederTest extends TestCase
         $admin = User::where('email', 'admin@colectivomusical.mx')->first();
 
         $this->assertNotNull($admin);
-        $this->assertSame('super_admin', $admin->role);
+        $this->assertSame('super-admin', $admin->role->slug);
     }
 
     public function test_seeder_crea_configuracion_global_con_descuento_web(): void

@@ -23,37 +23,43 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login.store.short');
 });
 
-// Panel administrativo
-Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+// Panel administrativo (cada módulo exige su permiso; ver config/permissions.php)
+Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::post('/session/keep-alive', [AuthenticatedSessionController::class, 'keepAlive'])->name('session.keep-alive');
 
     // Identidad y marca
-    Route::get('/identidad', [SiteSettingController::class, 'edit'])->name('settings.edit');
-    Route::put('/identidad', [SiteSettingController::class, 'update'])->name('settings.update');
+    Route::middleware('can:settings.manage')->group(function () {
+        Route::get('/identidad', [SiteSettingController::class, 'edit'])->name('settings.edit');
+        Route::put('/identidad', [SiteSettingController::class, 'update'])->name('settings.update');
+    });
 
     // Zonas de cobertura y viáticos
     Route::resource('zonas', CoverageZoneController::class)
         ->parameters(['zonas' => 'zone'])
         ->only(['index', 'store', 'update', 'destroy'])
-        ->names('zones');
+        ->names('zones')
+        ->middleware('can:zones.manage');
 
     // Catálogo: categorías y servicios
     Route::resource('categorias', CategoryController::class)
         ->parameters(['categorias' => 'category'])
         ->only(['index', 'store', 'update', 'destroy'])
-        ->names('categories');
+        ->names('categories')
+        ->middleware('can:catalog.manage_all');
 
-    Route::resource('servicios', ServiceController::class)
-        ->parameters(['servicios' => 'service'])
-        ->except(['show'])
-        ->names('services');
+    Route::middleware('can:catalog.manage_all')->group(function () {
+        Route::resource('servicios', ServiceController::class)
+            ->parameters(['servicios' => 'service'])
+            ->except(['show'])
+            ->names('services');
 
-    // Gestor multimedia de servicios
-    Route::post('/servicios/{service}/media/fotos', [ServiceMediaController::class, 'storeImages'])->name('services.media.images');
-    Route::post('/servicios/{service}/media/video', [ServiceMediaController::class, 'storeEmbed'])->name('services.media.embed');
-    Route::patch('/media/{media}', [ServiceMediaController::class, 'update'])->name('media.update');
-    Route::delete('/media/{media}', [ServiceMediaController::class, 'destroy'])->name('media.destroy');
-    Route::post('/media/upload-chunk', [MediaChunkController::class, 'store'])->name('media.upload-chunk');
+        // Gestor multimedia de servicios
+        Route::post('/servicios/{service}/media/fotos', [ServiceMediaController::class, 'storeImages'])->name('services.media.images');
+        Route::post('/servicios/{service}/media/video', [ServiceMediaController::class, 'storeEmbed'])->name('services.media.embed');
+        Route::patch('/media/{media}', [ServiceMediaController::class, 'update'])->name('media.update');
+        Route::delete('/media/{media}', [ServiceMediaController::class, 'destroy'])->name('media.destroy');
+        Route::post('/media/upload-chunk', [MediaChunkController::class, 'store'])->name('media.upload-chunk');
+    });
 });

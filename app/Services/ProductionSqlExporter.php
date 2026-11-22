@@ -26,7 +26,15 @@ class ProductionSqlExporter
     private const ADMIN_PASSWORD_HASH = '$2y$12$BgxhT8xgUFN4AVJ1.9MKSOv2Ze1KE5j0ImhwV2wn.TvsFGXLf7XY2';
 
     /** Tablas cuyos registros sembrados se exportan como catálogos iniciales. */
-    private const DATA_TABLES = ['users', 'site_settings', 'coverage_zones', 'categories', 'services', 'service_features'];
+    private const DATA_TABLES = [
+        'roles', 'permissions', 'role_permission', 'users',
+        'site_settings', 'coverage_zones', 'categories', 'services', 'service_features',
+    ];
+
+    /** Orden de exportación para tablas sin columna `id` (pivotes). */
+    private const ORDER_COLUMNS = [
+        'role_permission' => ['role_id', 'permission_id'],
+    ];
 
     private const TIMESTAMP_COLUMNS = ['created_at', 'updated_at', 'email_verified_at'];
 
@@ -100,6 +108,17 @@ class ProductionSqlExporter
                 continue;
             }
 
+            // Columna eliminada en una migración posterior: se quita de la definición.
+            if (preg_match('/^alter table `(\w+)` drop `(\w+)`$/', $statement, $m) && isset($parsed[$m[1]])) {
+                $before = count($parsed[$m[1]]);
+                $parsed[$m[1]] = array_values(array_filter($parsed[$m[1]], fn ($line) => ! str_starts_with($line, "`{$m[2]}` ")));
+                if (count($parsed[$m[1]]) === $before) {
+                    throw new RuntimeException("No se encontró la columna {$m[2]} en {$m[1]} para eliminarla.");
+                }
+
+                continue;
+            }
+
             if (! preg_match('/^alter table `(\w+)` add (.+)$/s', $statement, $m) || ! isset($parsed[$m[1]])) {
                 throw new RuntimeException("Sentencia no soportada por el exportador SQL: {$statement}");
             }
@@ -115,6 +134,9 @@ class ProductionSqlExporter
                 if ($c[3] !== $table) {
                     $dependencies[$table][] = $c[3];
                 }
+            } elseif (preg_match('/^`(\w+)` (.+)$/s', $clause, $c)) {
+                // Columna agregada en una migración posterior: se integra al CREATE TABLE.
+                $parsed[$table] = $this->insertColumn($parsed[$table], "`{$c[1]}` {$c[2]}");
             } else {
                 throw new RuntimeException("Cláusula ALTER no soportada por el exportador SQL: {$statement}");
             }
@@ -204,7 +226,11 @@ class ProductionSqlExporter
             $connection = $this->db->connection(self::SEED_CONNECTION);
 
             foreach ([...self::DATA_TABLES, config('database.migrations.table', 'migrations')] as $table) {
-                $rows = $connection->table($table)->orderBy('id')->get()->map(fn ($row) => (array) $row)->all();
+                $query = $connection->table($table);
+                foreach (self::ORDER_COLUMNS[$table] ?? ['id'] as $column) {
+                    $query->orderBy($column);
+                }
+                $rows = $query->get()->map(fn ($row) => (array) $row)->all();
                 if ($rows !== []) {
                     $inserts[] = $this->insertStatement($table, $rows);
                 }
@@ -259,6 +285,27 @@ class ProductionSqlExporter
         }
 
         return "'".strtr((string) $value, ['\\' => '\\\\', "'" => "\\'", "\n" => '\\n', "\r" => '\\r', "\0" => '\\0'])."'";
+    }
+
+    /**
+     * Inserta una columna después de la última columna existente (antes de las
+     * llaves, índices y restricciones).
+     *
+     * @param  list<string>  $lines
+     * @return list<string>
+     */
+    private function insertColumn(array $lines, string $column): array
+    {
+        $position = 0;
+        foreach ($lines as $index => $line) {
+            if (str_starts_with($line, '`')) {
+                $position = $index + 1;
+            }
+        }
+
+        array_splice($lines, $position, 0, [$column]);
+
+        return $lines;
     }
 
     /**

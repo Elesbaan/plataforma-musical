@@ -23,7 +23,7 @@ class CatalogAdminTest extends TestCase
     {
         parent::setUp();
         $this->withoutVite();
-        $this->admin = User::factory()->create(['role' => 'super_admin']);
+        $this->admin = User::factory()->superAdmin()->create();
     }
 
     private function category(array $attributes = []): Category

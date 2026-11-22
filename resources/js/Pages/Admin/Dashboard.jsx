@@ -1,28 +1,34 @@
 import { Link, usePage } from '@inertiajs/react';
 import { ArrowRight, CalendarDays, FileText, MapPinned, Music, Palette } from 'lucide-react';
+import usePermissions from '@/hooks/usePermissions';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 const MODULES = [
-    { title: 'Identidad y marca', description: 'Nombre, logos, colores, contacto y reglas del cotizador.', href: '/admin/identidad', Icon: Palette },
-    { title: 'Servicios', description: 'Catálogo, precios, características y capacidad diaria.', href: '/admin/servicios', Icon: Music },
-    { title: 'Zonas y viáticos', description: 'Ciudades de cobertura y cargos por traslado.', href: '/admin/zonas', Icon: MapPinned },
-    { title: 'Cotizaciones', description: 'Seguimiento de prospectos y cambio de estatus.', href: '/admin/cotizaciones', Icon: FileText },
-    { title: 'Agenda de eventos', description: 'Calendario de eventos confirmados y ocupación.', href: '/admin/agenda', Icon: CalendarDays },
+    { title: 'Identidad y marca', description: 'Nombre, logos, colores, contacto y reglas del cotizador.', href: '/admin/identidad', Icon: Palette, permission: 'settings.manage' },
+    { title: 'Servicios', description: 'Catálogo, precios, características y capacidad diaria.', href: '/admin/servicios', Icon: Music, permission: ['catalog.manage_all', 'catalog.manage_own'] },
+    { title: 'Zonas y viáticos', description: 'Ciudades de cobertura y cargos por traslado.', href: '/admin/zonas', Icon: MapPinned, permission: 'zones.manage' },
+    { title: 'Cotizaciones', description: 'Seguimiento de prospectos y cambio de estatus.', href: '/admin/cotizaciones', Icon: FileText, permission: 'quotes.view' },
+    { title: 'Agenda de eventos', description: 'Calendario de eventos confirmados y ocupación.', href: '/admin/agenda', Icon: CalendarDays, permission: ['events.view_all', 'events.view_own'] },
 ];
 
 /** Dashboard inicial. Las métricas clave se integran en la Fase 5. */
 export default function Dashboard() {
     const { auth } = usePage().props;
+    const can = usePermissions();
+    const modules = MODULES.filter((module) => can(module.permission));
 
     return (
         <AdminLayout title="Dashboard">
             <section className="rounded-2xl border border-line bg-surface-raised p-6 sm:p-8">
                 <h2 className="font-display text-2xl font-semibold sm:text-3xl">Hola, {auth?.user?.name}</h2>
-                <p className="mt-2 text-ink-muted">Desde aquí administras tu marca, tu catálogo y tus cotizaciones.</p>
+                <p className="mt-2 text-ink-muted">
+                    {auth?.user?.role ? `Ingresaste como ${auth.user.role.name}.` : 'Tu cuenta aún no tiene un perfil asignado.'}{' '}
+                    {modules.length > 0 ? 'Estos son los módulos a los que tienes acceso.' : 'Pide al administrador que te asigne permisos.'}
+                </p>
             </section>
 
             <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {MODULES.map(({ title, description, href, Icon }) => (
+                {modules.map(({ title, description, href, Icon }) => (
                     <li key={href}>
                         <Link
                             href={href}

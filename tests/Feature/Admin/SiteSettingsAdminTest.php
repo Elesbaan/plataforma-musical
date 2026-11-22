@@ -56,7 +56,7 @@ class SiteSettingsAdminTest extends TestCase
 
     private function admin(): User
     {
-        return User::factory()->create(['role' => 'super_admin']);
+        return User::factory()->superAdmin()->create();
     }
 
     public function test_invitado_no_accede_a_identidad(): void

@@ -31,7 +31,7 @@ class AdminAuthTest extends TestCase
 
     public function test_administrador_inicia_sesion_y_ve_el_dashboard(): void
     {
-        $user = User::factory()->create(['role' => 'super_admin']);
+        $user = User::factory()->superAdmin()->create();
 
         $this->post('/admin/login', ['email' => $user->email, 'password' => 'password'])
             ->assertRedirect('/admin');
@@ -43,7 +43,7 @@ class AdminAuthTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Admin/Dashboard')
                 ->where('auth.user.email', $user->email)
-                ->where('auth.user.role', 'super_admin')
+                ->where('auth.user.role.slug', 'super-admin')
                 ->missing('auth.user.password')
             );
     }

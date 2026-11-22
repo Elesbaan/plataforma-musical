@@ -18,6 +18,18 @@ CREATE TABLE `migrations` (
   `batch` int not null
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Tabla: roles
+CREATE TABLE `roles` (
+  `id` bigint unsigned not null auto_increment primary key,
+  `name` varchar(100) not null,
+  `slug` varchar(100) not null,
+  `description` varchar(255) null,
+  `is_system` tinyint(1) not null default '0',
+  `created_at` timestamp null,
+  `updated_at` timestamp null,
+  UNIQUE KEY `roles_slug_unique` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Tabla: users
 CREATE TABLE `users` (
   `id` bigint unsigned not null auto_increment primary key,
@@ -28,8 +40,10 @@ CREATE TABLE `users` (
   `remember_token` varchar(100) null,
   `created_at` timestamp null,
   `updated_at` timestamp null,
-  `role` enum('super_admin', 'manager') not null default 'manager',
-  UNIQUE KEY `users_email_unique` (`email`)
+  `role_id` bigint unsigned null,
+  `is_active` tinyint(1) not null default '1',
+  UNIQUE KEY `users_email_unique` (`email`),
+  CONSTRAINT `users_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) on delete restrict
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabla: password_reset_tokens
@@ -293,14 +307,80 @@ CREATE TABLE `event_services` (
   CONSTRAINT `event_services_service_id_foreign` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`) on delete cascade
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Tabla: permissions
+CREATE TABLE `permissions` (
+  `id` bigint unsigned not null auto_increment primary key,
+  `key` varchar(100) not null,
+  `module` varchar(50) not null,
+  `label` varchar(255) not null,
+  `created_at` timestamp null,
+  `updated_at` timestamp null,
+  UNIQUE KEY `permissions_key_unique` (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla: role_permission
+CREATE TABLE `role_permission` (
+  `role_id` bigint unsigned not null,
+  `permission_id` bigint unsigned not null,
+  primary key (`role_id`, `permission_id`),
+  CONSTRAINT `role_permission_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) on delete cascade,
+  CONSTRAINT `role_permission_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) on delete cascade
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla: service_user
+CREATE TABLE `service_user` (
+  `user_id` bigint unsigned not null,
+  `service_id` bigint unsigned not null,
+  primary key (`user_id`, `service_id`),
+  CONSTRAINT `service_user_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) on delete cascade,
+  CONSTRAINT `service_user_service_id_foreign` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`) on delete cascade
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ============================================================================
 -- Datos iniciales
 -- Credenciales del administrador: admin@colectivomusical.mx / password
 -- IMPORTANTE: cambia la contraseña inmediatamente después del primer acceso.
 -- ============================================================================
 
-INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`, `role`) VALUES
-(1, 'Administrador', 'admin@colectivomusical.mx', NOW(), '$2y$12$BgxhT8xgUFN4AVJ1.9MKSOv2Ze1KE5j0ImhwV2wn.TvsFGXLf7XY2', NULL, NOW(), NOW(), 'super_admin');
+INSERT INTO `roles` (`id`, `name`, `slug`, `description`, `is_system`, `created_at`, `updated_at`) VALUES
+(1, 'Super Administrador', 'super-admin', 'Acceso total a la plataforma.', 1, NOW(), NOW()),
+(2, 'Coordinador de Ventas', 'coordinador-ventas', 'Atiende cotizaciones y administra la agenda de eventos.', 1, NOW(), NOW()),
+(3, 'Proveedor Aliado', 'proveedor-aliado', 'Gestiona la galería y descripción de sus propios servicios y consulta sus eventos.', 1, NOW(), NOW());
+
+INSERT INTO `permissions` (`id`, `key`, `module`, `label`, `created_at`, `updated_at`) VALUES
+(1, 'settings.manage', 'settings', 'Administrar identidad, marca, colores y descuentos', NOW(), NOW()),
+(2, 'zones.manage', 'zones', 'Administrar ciudades y viáticos', NOW(), NOW()),
+(3, 'catalog.manage_all', 'catalog', 'Crear y editar todos los servicios y categorías', NOW(), NOW()),
+(4, 'catalog.manage_own', 'catalog', 'Editar galería, descripción y capacidad solo de sus servicios vinculados', NOW(), NOW()),
+(5, 'quotes.view', 'quotes', 'Ver cotizaciones', NOW(), NOW()),
+(6, 'quotes.manage', 'quotes', 'Atender cotizaciones (estatus, notas y confirmación)', NOW(), NOW()),
+(7, 'events.view_all', 'events', 'Ver la agenda completa', NOW(), NOW()),
+(8, 'events.view_own', 'events', 'Ver solo los eventos donde participan sus servicios', NOW(), NOW()),
+(9, 'events.manage', 'events', 'Crear y editar eventos de la agenda', NOW(), NOW()),
+(10, 'users.manage', 'users', 'Administrar usuarios', NOW(), NOW()),
+(11, 'roles.manage', 'roles', 'Administrar perfiles y su matriz de permisos', NOW(), NOW());
+
+INSERT INTO `role_permission` (`role_id`, `permission_id`) VALUES
+(1, 1),
+(1, 2),
+(1, 3),
+(1, 4),
+(1, 5),
+(1, 6),
+(1, 7),
+(1, 8),
+(1, 9),
+(1, 10),
+(1, 11),
+(2, 5),
+(2, 6),
+(2, 7),
+(2, 9),
+(3, 4),
+(3, 8);
+
+INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`, `role_id`, `is_active`) VALUES
+(1, 'Administrador', 'admin@colectivomusical.mx', NOW(), '$2y$12$BgxhT8xgUFN4AVJ1.9MKSOv2Ze1KE5j0ImhwV2wn.TvsFGXLf7XY2', NULL, NOW(), NOW(), 1, 1);
 
 INSERT INTO `site_settings` (`id`, `created_at`, `updated_at`, `brand_name`, `tagline`, `seo_description`, `logo_light_path`, `logo_dark_path`, `favicon_path`, `color_primary`, `color_secondary`, `color_accent`, `whatsapp_number`, `phone_number`, `contact_email`, `address_text`, `facebook_url`, `instagram_url`, `tiktok_url`, `youtube_url`, `spotify_url`, `online_discount_active`, `online_discount_type`, `online_discount_value`, `online_discount_min_amount`, `quote_validity_days`, `quote_terms_text`, `hero_title`, `hero_subtitle`, `hero_video_url`) VALUES
 (1, NOW(), NOW(), 'Colectivo Musical Toluca', 'Experiencias musicales para celebrar extraordinariamente', 'Grupo versátil y servicios de entretenimiento para bodas, XV años y eventos corporativos.', NULL, NULL, NULL, '#6D28D9', '#0F172A', '#F59E0B', '527221234567', '722 123 4567', 'reservaciones@colectivomusical.mx', 'Toluca, Estado de México', NULL, NULL, NULL, NULL, NULL, 1, 'percentage', 10, 0, 7, 'Cotización válida por el periodo indicado. Salón, horarios y disponibilidad sujetos a confirmación.', 'La música que convierte tu evento en una celebración inolvidable', 'Producción musical profesional para bodas, XV años y eventos corporativos.', NULL);
@@ -370,6 +450,7 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (10, '2026_11_22_023558_create_service_media_table', 1),
 (11, '2026_11_22_023559_create_events_table', 1),
 (12, '2026_11_22_023559_create_quote_items_table', 1),
-(13, '2026_11_22_023600_create_event_services_table', 1);
+(13, '2026_11_22_023600_create_event_services_table', 1),
+(14, '2026_11_23_000000_create_rbac_tables', 1);
 
 SET FOREIGN_KEY_CHECKS = 1;

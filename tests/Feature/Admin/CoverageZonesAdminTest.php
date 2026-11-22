@@ -19,7 +19,7 @@ class CoverageZonesAdminTest extends TestCase
     {
         parent::setUp();
         $this->withoutVite();
-        $this->admin = User::factory()->create(['role' => 'super_admin']);
+        $this->admin = User::factory()->superAdmin()->create();
     }
 
     private function zone(array $attributes = []): CoverageZone

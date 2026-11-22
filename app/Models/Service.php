@@ -19,5 +19,7 @@ class Service extends Model
     public function category() { return $this->belongsTo(Category::class); }
     public function features() { return $this->hasMany(ServiceFeature::class)->orderBy('sort_order'); }
     public function media() { return $this->hasMany(ServiceMedia::class)->orderBy('sort_order')->orderBy('id'); }
+    /** Usuarios vinculados (ej. el proveedor aliado dueño del servicio). */
+    public function users() { return $this->belongsToMany(User::class, 'service_user'); }
     public function events() { return $this->belongsToMany(Event::class, 'event_services')->withPivot('quantity')->withTimestamps(); }
 }

@@ -36,7 +36,8 @@ class ProductionSchemaSqlTest extends TestCase
 
         foreach (['users', 'sessions', 'cache', 'cache_locks', 'jobs', 'failed_jobs', 'migrations',
             'site_settings', 'categories', 'services', 'service_features', 'service_media',
-            'coverage_zones', 'quotes', 'quote_items', 'events', 'event_services'] as $table) {
+            'coverage_zones', 'quotes', 'quote_items', 'events', 'event_services',
+            'roles', 'permissions', 'role_permission', 'service_user'] as $table) {
             $this->assertStringContainsString("CREATE TABLE `{$table}` (", $sql);
         }
 
@@ -45,7 +46,7 @@ class ProductionSchemaSqlTest extends TestCase
             substr_count($sql, 'ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;')
         );
 
-        foreach (['users', 'site_settings', 'coverage_zones', 'categories', 'services', 'service_features', 'migrations'] as $table) {
+        foreach (['roles', 'permissions', 'role_permission', 'users', 'site_settings', 'coverage_zones', 'categories', 'services', 'service_features', 'migrations'] as $table) {
             $this->assertStringContainsString("INSERT INTO `{$table}`", $sql);
         }
     }

@@ -19,16 +19,17 @@ import FlashMessages from '@/Components/FlashMessages';
 import IdleSessionWarning from '@/Components/IdleSessionWarning';
 import ThemeToggle from '@/Components/ThemeToggle';
 import useIdleLogout from '@/hooks/useIdleLogout';
+import usePermissions from '@/hooks/usePermissions';
 
-/** Módulos del panel (rutas, no datos de negocio). */
+/** Módulos del panel (rutas, no datos de negocio) y el permiso que exige cada uno. */
 const NAV_ITEMS = [
     { label: 'Dashboard', href: '/admin', Icon: LayoutDashboard, exact: true },
-    { label: 'Identidad y marca', href: '/admin/identidad', Icon: Palette },
-    { label: 'Categorías', href: '/admin/categorias', Icon: Layers },
-    { label: 'Servicios', href: '/admin/servicios', Icon: Music },
-    { label: 'Zonas y viáticos', href: '/admin/zonas', Icon: MapPinned },
-    { label: 'Cotizaciones', href: '/admin/cotizaciones', Icon: FileText },
-    { label: 'Agenda de eventos', href: '/admin/agenda', Icon: CalendarDays },
+    { label: 'Identidad y marca', href: '/admin/identidad', Icon: Palette, permission: 'settings.manage' },
+    { label: 'Categorías', href: '/admin/categorias', Icon: Layers, permission: 'catalog.manage_all' },
+    { label: 'Servicios', href: '/admin/servicios', Icon: Music, permission: ['catalog.manage_all', 'catalog.manage_own'] },
+    { label: 'Zonas y viáticos', href: '/admin/zonas', Icon: MapPinned, permission: 'zones.manage' },
+    { label: 'Cotizaciones', href: '/admin/cotizaciones', Icon: FileText, permission: 'quotes.view' },
+    { label: 'Agenda de eventos', href: '/admin/agenda', Icon: CalendarDays, permission: ['events.view_all', 'events.view_own'] },
 ];
 
 const COLLAPSE_KEY = 'admin_sidebar_collapsed';
@@ -43,10 +44,11 @@ function readCollapsed() {
 
 function SidebarNav({ collapsed, onNavigate }) {
     const { url } = usePage();
+    const can = usePermissions();
 
     return (
         <ul className="space-y-1">
-            {NAV_ITEMS.map(({ label, href, Icon, exact }) => {
+            {NAV_ITEMS.filter((item) => can(item.permission)).map(({ label, href, Icon, exact }) => {
                 const active = exact ? url === href : url === href || url.startsWith(`${href}/`) || url.startsWith(`${href}?`);
                 return (
                     <li key={href}>

@@ -32,7 +32,7 @@ class MediaManagerTest extends TestCase
         Storage::fake(UploadService::DISK);
         Storage::fake(ChunkedVideoUploadService::DISK);
 
-        $this->admin = User::factory()->create(['role' => 'super_admin']);
+        $this->admin = User::factory()->superAdmin()->create();
         $category = Category::create(['name' => 'Show', 'slug' => 'show', 'is_active' => true]);
         $this->service = Service::create([
             'category_id' => $category->id, 'name' => 'Robot LED', 'slug' => 'robot-led',

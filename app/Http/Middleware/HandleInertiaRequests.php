@@ -31,7 +31,12 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'siteSettings' => fn () => $this->publicSettings(),
             'auth' => [
-                'user' => fn () => $request->user()?->only(['id', 'name', 'email', 'role']),
+                'user' => fn () => $request->user() ? [
+                    ...$request->user()->only(['id', 'name', 'email']),
+                    'role' => $request->user()->role?->only(['name', 'slug']),
+                ] : null,
+                // Claves de permiso efectivas: el menú y las acciones se muestran según ellas.
+                'permissions' => fn () => $request->user()?->permissionKeys() ?? [],
                 // Minutos de inactividad antes de cerrar la sesión (temporizador del panel).
                 'sessionLifetime' => fn () => $request->user() ? (int) config('session.lifetime') : null,
             ],
