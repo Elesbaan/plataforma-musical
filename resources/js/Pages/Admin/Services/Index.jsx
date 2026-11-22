@@ -31,7 +31,7 @@ function StatusBadges({ service }) {
     );
 }
 
-export default function Index({ services, categories, filters }) {
+export default function Index({ services, categories, filters, abilities }) {
     const [search, setSearch] = useState(filters.search ?? '');
     const firstRender = useRef(true);
 
@@ -55,10 +55,12 @@ export default function Index({ services, categories, filters }) {
         <AdminLayout
             title="Servicios"
             actions={
-                <Button href="/admin/servicios/crear">
-                    <Plus className="h-4 w-4" aria-hidden="true" />
-                    Nuevo servicio
-                </Button>
+                abilities.create ? (
+                    <Button href="/admin/servicios/crear">
+                        <Plus className="h-4 w-4" aria-hidden="true" />
+                        Nuevo servicio
+                    </Button>
+                ) : null
             }
         >
             <Card>
@@ -117,7 +119,11 @@ export default function Index({ services, categories, filters }) {
                 {services.data.length === 0 ? (
                     <div className="flex flex-col items-center gap-3 py-10 text-center text-ink-muted">
                         <Music className="h-10 w-10" aria-hidden="true" />
-                        <p>No encontramos servicios con esos filtros.</p>
+                        <p>
+                            {abilities.create || Object.keys(filters).length > 0
+                                ? 'No encontramos servicios con esos filtros.'
+                                : 'Aún no tienes servicios vinculados. Pide al administrador que te asigne los tuyos.'}
+                        </p>
                     </div>
                 ) : (
                     <>

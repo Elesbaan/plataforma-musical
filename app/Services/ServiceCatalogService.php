@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\ActionNotAllowedException;
 use App\Models\Service;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -22,11 +23,12 @@ class ServiceCatalogService
     /**
      * @param  array{search?: ?string, category?: ?string, status?: ?string}  $filters
      */
-    public function paginate(array $filters): LengthAwarePaginator
+    public function paginate(array $filters, ?User $onlyLinkedTo = null): LengthAwarePaginator
     {
         return Service::query()
             ->with('category:id,name')
             ->withCount('media')
+            ->when($onlyLinkedTo, fn ($query, User $user) => $query->whereHas('users', fn ($q) => $q->whereKey($user->id)))
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where('name', 'like', '%'.addcslashes($search, '%_\\').'%'))
             ->when($filters['category'] ?? null, fn ($query, $category) => $query->where('category_id', $category))
             ->when($filters['status'] ?? null, fn ($query, $status) => match ($status) {
@@ -75,6 +77,26 @@ class ServiceCatalogService
     {
         return DB::transaction(function () use ($service, $data) {
             $service->update($this->attributes($data));
+            $this->syncFeatures($service, $data['features'] ?? []);
+
+            return $service;
+        });
+    }
+
+    /**
+     * Edición con alcance propio (catalog.manage_own): solo contenido y capacidad;
+     * nunca precio, nombre, categoría ni publicación.
+     *
+     * @param  array<string, mixed>  $data  Datos validados por ServiceRequest (modo restringido).
+     */
+    public function updateContent(Service $service, array $data): Service
+    {
+        return DB::transaction(function () use ($service, $data) {
+            $service->update([
+                'short_description' => $data['short_description'] ?? null,
+                'full_description' => $data['full_description'] ?? null,
+                'daily_capacity' => (int) $data['daily_capacity'],
+            ]);
             $this->syncFeatures($service, $data['features'] ?? []);
 
             return $service;

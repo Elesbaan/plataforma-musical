@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PublicPageController;
+use App\Models\Service;
 use Illuminate\Support\Facades\Route;
 
 // Sitio público
@@ -51,15 +52,19 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
         ->names('categories')
         ->middleware('can:catalog.manage_all');
 
-    Route::middleware('can:catalog.manage_all')->group(function () {
-        Route::resource('servicios', ServiceController::class)
-            ->parameters(['servicios' => 'service'])
-            ->except(['show'])
-            ->names('services');
+    // Servicios: ServicePolicy distingue catalog.manage_all de catalog.manage_own
+    // (solo servicios vinculados y sin cambiar precios).
+    Route::middleware('can:viewAny,'.Service::class)->group(function () {
+        Route::get('/servicios', [ServiceController::class, 'index'])->name('services.index');
+        Route::get('/servicios/crear', [ServiceController::class, 'create'])->middleware('can:create,'.Service::class)->name('services.create');
+        Route::post('/servicios', [ServiceController::class, 'store'])->middleware('can:create,'.Service::class)->name('services.store');
+        Route::get('/servicios/{service}/editar', [ServiceController::class, 'edit'])->middleware('can:update,service')->name('services.edit');
+        Route::match(['put', 'patch'], '/servicios/{service}', [ServiceController::class, 'update'])->middleware('can:update,service')->name('services.update');
+        Route::delete('/servicios/{service}', [ServiceController::class, 'destroy'])->middleware('can:delete,service')->name('services.destroy');
 
-        // Gestor multimedia de servicios
-        Route::post('/servicios/{service}/media/fotos', [ServiceMediaController::class, 'storeImages'])->name('services.media.images');
-        Route::post('/servicios/{service}/media/video', [ServiceMediaController::class, 'storeEmbed'])->name('services.media.embed');
+        // Gestor multimedia (cada acción se autoriza contra el servicio dueño del archivo)
+        Route::post('/servicios/{service}/media/fotos', [ServiceMediaController::class, 'storeImages'])->middleware('can:update,service')->name('services.media.images');
+        Route::post('/servicios/{service}/media/video', [ServiceMediaController::class, 'storeEmbed'])->middleware('can:update,service')->name('services.media.embed');
         Route::patch('/media/{media}', [ServiceMediaController::class, 'update'])->name('media.update');
         Route::delete('/media/{media}', [ServiceMediaController::class, 'destroy'])->name('media.destroy');
         Route::post('/media/upload-chunk', [MediaChunkController::class, 'store'])->name('media.upload-chunk');

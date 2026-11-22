@@ -10,6 +10,7 @@ use App\Models\Service;
 use App\Models\ServiceMedia;
 use App\Services\ServiceMediaService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 
 class ServiceMediaController extends Controller
 {
@@ -31,6 +32,8 @@ class ServiceMediaController extends Controller
 
     public function update(UpdateServiceMediaRequest $request, ServiceMedia $media): RedirectResponse
     {
+        Gate::authorize('update', $media->service);
+
         $this->media->update($media, $request->validated());
 
         return back()->with('success', 'Se actualizó la galería.');
@@ -38,6 +41,8 @@ class ServiceMediaController extends Controller
 
     public function destroy(ServiceMedia $media): RedirectResponse
     {
+        Gate::authorize('update', $media->service);
+
         $this->media->delete($media);
 
         return back()->with('success', 'Se eliminó el archivo de la galería.');

@@ -7,7 +7,7 @@ import Button from '@/Components/Button';
 import ConfirmDialog from '@/Components/ConfirmDialog';
 import AdminLayout from '@/Layouts/AdminLayout';
 
-export default function Edit({ service, categories, mediaLimits }) {
+export default function Edit({ service, categories, mediaLimits, abilities }) {
     const [confirming, setConfirming] = useState(false);
     const [processing, setProcessing] = useState(false);
 
@@ -25,13 +25,15 @@ export default function Edit({ service, categories, mediaLimits }) {
         <AdminLayout
             title={service.name}
             actions={
-                <Button variant="ghost" onClick={() => setConfirming(true)} className="text-red-600 dark:text-red-400">
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    Eliminar servicio
-                </Button>
+                abilities.delete ? (
+                    <Button variant="ghost" onClick={() => setConfirming(true)} className="text-red-600 dark:text-red-400">
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        Eliminar servicio
+                    </Button>
+                ) : null
             }
         >
-            <ServiceForm key={service.id} service={service} categories={categories} />
+            <ServiceForm key={service.id} service={service} categories={categories} restricted={!abilities.managePricing} />
 
             <MediaManager service={service} limits={mediaLimits} />
 

@@ -1,11 +1,14 @@
 import { useForm } from '@inertiajs/react';
-import { Save } from 'lucide-react';
+import { Lock, Save } from 'lucide-react';
 import FeatureListEditor from '@/Components/Admin/FeatureListEditor';
 import Button from '@/Components/Button';
 import Card from '@/Components/Card';
 import { SelectField, TextAreaField, TextField, ToggleField } from '@/Components/Form/fields';
-import { SERVICE_TYPES } from '@/lib/catalog';
+import { SERVICE_TYPES, serviceTypeLabel } from '@/lib/catalog';
 import { formatMoney } from '@/lib/format';
+
+/** Campos que puede editar quien solo tiene alcance propio (catalog.manage_own). */
+const CONTENT_FIELDS = ['short_description', 'full_description', 'daily_capacity', 'features'];
 
 function initialData(service, categories) {
     return {
@@ -24,9 +27,24 @@ function initialData(service, categories) {
     };
 }
 
-/** Formulario compartido para crear y editar servicios. */
-export default function ServiceForm({ service = null, categories }) {
-    const { data, setData, post, put, processing, errors, isDirty } = useForm(initialData(service, categories));
+function ReadOnlyRow({ label, children }) {
+    return (
+        <div className="flex flex-col gap-0.5 border-b border-line py-2 last:border-0 sm:flex-row sm:justify-between sm:gap-4">
+            <dt className="text-sm text-ink-muted">{label}</dt>
+            <dd className="text-sm font-medium text-ink sm:text-right">{children}</dd>
+        </div>
+    );
+}
+
+/**
+ * Formulario compartido para crear y editar servicios.
+ * Con `restricted` (alcance propio) solo se editan contenido, características y
+ * capacidad; los datos comerciales se muestran como solo lectura.
+ */
+export default function ServiceForm({ service = null, categories, restricted = false }) {
+    const { data, setData, post, put, processing, errors, isDirty, transform } = useForm(initialData(service, categories));
+
+    transform((values) => (restricted ? Object.fromEntries(CONTENT_FIELDS.map((key) => [key, values[key]])) : values));
 
     const submit = (event) => {
         event.preventDefault();
@@ -35,24 +53,29 @@ export default function ServiceForm({ service = null, categories }) {
     };
 
     const field = (name) => ({ value: data[name], onChange: (value) => setData(name, value), error: errors[name] });
+    const restrictedError = Object.entries(errors).find(([key]) => !CONTENT_FIELDS.includes(key) && !key.startsWith('features.'))?.[1];
 
     return (
         <form onSubmit={submit} className="space-y-6" noValidate>
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
                 <div className="min-w-0 space-y-6">
-                    <Card title="Información general">
+                    <Card title={restricted ? 'Descripción' : 'Información general'}>
                         <div className="grid gap-5 md:grid-cols-2">
-                            <TextField label="Nombre del servicio" required maxLength={150} className="md:col-span-2" {...field('name')} />
-                            <SelectField
-                                label="Categoría"
-                                required
-                                options={categories.map((category) => ({
-                                    value: category.id,
-                                    label: category.is_active ? category.name : `${category.name} (inactiva)`,
-                                }))}
-                                {...field('category_id')}
-                            />
-                            <SelectField label="Tipo de servicio" required options={SERVICE_TYPES} {...field('service_type')} />
+                            {!restricted && (
+                                <>
+                                    <TextField label="Nombre del servicio" required maxLength={150} className="md:col-span-2" {...field('name')} />
+                                    <SelectField
+                                        label="Categoría"
+                                        required
+                                        options={categories.map((category) => ({
+                                            value: category.id,
+                                            label: category.is_active ? category.name : `${category.name} (inactiva)`,
+                                        }))}
+                                        {...field('category_id')}
+                                    />
+                                    <SelectField label="Tipo de servicio" required options={SERVICE_TYPES} {...field('service_type')} />
+                                </>
+                            )}
                             <TextAreaField
                                 label="Descripción corta"
                                 hint="Aparece en las tarjetas del catálogo."
@@ -78,21 +101,40 @@ export default function ServiceForm({ service = null, categories }) {
                 </div>
 
                 <div className="min-w-0 space-y-6">
-                    <Card title="Precio">
-                        <div className="grid gap-5">
-                            <TextField
-                                label="Precio base (MXN)"
-                                type="number"
-                                inputMode="decimal"
-                                min="0"
-                                step="0.01"
-                                required
-                                hint={data.base_price !== '' ? `Se mostrará como “Desde ${formatMoney(data.base_price)} MXN”.` : undefined}
-                                {...field('base_price')}
-                            />
-                            <TextField label="Unidad de precio" required maxLength={60} placeholder="Ej. por evento (5 hrs)" {...field('price_unit')} />
-                        </div>
-                    </Card>
+                    {restricted ? (
+                        <Card title="Datos comerciales" description="Solo el equipo administrador puede cambiarlos.">
+                            <dl>
+                                <ReadOnlyRow label="Servicio">{service?.name}</ReadOnlyRow>
+                                <ReadOnlyRow label="Categoría">{service?.category?.name ?? '—'}</ReadOnlyRow>
+                                <ReadOnlyRow label="Tipo">{serviceTypeLabel(service?.service_type)}</ReadOnlyRow>
+                                <ReadOnlyRow label="Precio base">
+                                    {formatMoney(service?.base_price)} <span className="font-normal text-ink-muted">{service?.price_unit}</span>
+                                </ReadOnlyRow>
+                                <ReadOnlyRow label="Publicación">{service?.is_active ? 'Activo' : 'Inactivo'}</ReadOnlyRow>
+                            </dl>
+                            <p className="mt-3 flex items-start gap-2 text-xs text-ink-muted">
+                                <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                Si necesitas ajustar el precio, contacta al administrador.
+                            </p>
+                            {restrictedError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{restrictedError}</p>}
+                        </Card>
+                    ) : (
+                        <Card title="Precio">
+                            <div className="grid gap-5">
+                                <TextField
+                                    label="Precio base (MXN)"
+                                    type="number"
+                                    inputMode="decimal"
+                                    min="0"
+                                    step="0.01"
+                                    required
+                                    hint={data.base_price !== '' ? `Se mostrará como “Desde ${formatMoney(data.base_price)} MXN”.` : undefined}
+                                    {...field('base_price')}
+                                />
+                                <TextField label="Unidad de precio" required maxLength={60} placeholder="Ej. por evento (5 hrs)" {...field('price_unit')} />
+                            </div>
+                        </Card>
+                    )}
 
                     <Card title="Disponibilidad">
                         <TextField
@@ -107,23 +149,25 @@ export default function ServiceForm({ service = null, categories }) {
                         />
                     </Card>
 
-                    <Card title="Publicación">
-                        <div className="grid gap-3">
-                            <ToggleField
-                                label="Activo"
-                                description="Visible en el sitio y el cotizador."
-                                checked={data.is_active}
-                                onChange={(value) => setData('is_active', value)}
-                            />
-                            <ToggleField
-                                label="Destacado"
-                                description="Aparece en la portada como paquete estrella."
-                                checked={data.is_featured}
-                                onChange={(value) => setData('is_featured', value)}
-                            />
-                            <TextField label="Orden" type="number" inputMode="numeric" min="0" {...field('sort_order')} />
-                        </div>
-                    </Card>
+                    {!restricted && (
+                        <Card title="Publicación">
+                            <div className="grid gap-3">
+                                <ToggleField
+                                    label="Activo"
+                                    description="Visible en el sitio y el cotizador."
+                                    checked={data.is_active}
+                                    onChange={(value) => setData('is_active', value)}
+                                />
+                                <ToggleField
+                                    label="Destacado"
+                                    description="Aparece en la portada como paquete estrella."
+                                    checked={data.is_featured}
+                                    onChange={(value) => setData('is_featured', value)}
+                                />
+                                <TextField label="Orden" type="number" inputMode="numeric" min="0" {...field('sort_order')} />
+                            </div>
+                        </Card>
+                    )}
                 </div>
             </div>
 

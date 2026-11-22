@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Service;
 use App\Services\MediaLimits;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -9,9 +10,15 @@ use Illuminate\Validation\Validator;
 
 class UploadVideoChunkRequest extends FormRequest
 {
+    /**
+     * Solo quien puede editar el servicio destino sube videos a su galería.
+     * Si el servicio no existe, la regla `exists` responde con el error adecuado.
+     */
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        $service = Service::find($this->integer('service_id'));
+
+        return $service ? $this->user()->can('update', $service) : $this->user() !== null;
     }
 
     /**

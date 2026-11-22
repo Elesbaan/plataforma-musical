@@ -13,6 +13,10 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Catálogo de servicios. La autorización por acción la aplica ServicePolicy
+ * en las rutas (can:viewAny / create / update / delete).
+ */
 class ServiceController extends Controller
 {
     public function __construct(
@@ -23,11 +27,15 @@ class ServiceController extends Controller
     public function index(Request $request): Response
     {
         $filters = $request->only(['search', 'category', 'status']);
+        $user = $request->user();
+        $canManageAll = $user->can('managePricing', Service::class);
 
         return Inertia::render('Admin/Services/Index', [
-            'services' => $this->catalog->paginate($filters),
+            // Con alcance propio solo se listan los servicios vinculados al usuario.
+            'services' => $this->catalog->paginate($filters, $canManageAll ? null : $user),
             'categories' => $this->categories->options(),
             'filters' => (object) $filters,
+            'abilities' => ['create' => $user->can('create', Service::class)],
         ]);
     }
 
@@ -47,18 +55,26 @@ class ServiceController extends Controller
             ->with('success', "Se creó {$service->name}. Ahora puedes agregar fotos y videos.");
     }
 
-    public function edit(Service $service, MediaLimits $limits): Response
+    public function edit(Request $request, Service $service, MediaLimits $limits): Response
     {
+        $user = $request->user();
+
         return Inertia::render('Admin/Services/Edit', [
-            'service' => $this->catalog->forEdit($service),
+            'service' => $this->catalog->forEdit($service)->load('category:id,name'),
             'categories' => $this->categories->options(),
             'mediaLimits' => $limits->toArray(),
+            'abilities' => [
+                'managePricing' => $user->can('managePricing', Service::class),
+                'delete' => $user->can('delete', $service),
+            ],
         ]);
     }
 
     public function update(ServiceRequest $request, Service $service): RedirectResponse
     {
-        $this->catalog->update($service, $request->validated());
+        $request->isRestricted()
+            ? $this->catalog->updateContent($service, $request->validated())
+            : $this->catalog->update($service, $request->validated());
 
         return back()->with('success', "Se guardaron los cambios de {$service->name}.");
     }
