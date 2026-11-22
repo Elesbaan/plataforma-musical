@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CoverageZoneController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -27,4 +28,10 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // Identidad y marca
     Route::get('/identidad', [SiteSettingController::class, 'edit'])->name('settings.edit');
     Route::put('/identidad', [SiteSettingController::class, 'update'])->name('settings.update');
+
+    // Zonas de cobertura y viáticos
+    Route::resource('zonas', CoverageZoneController::class)
+        ->parameters(['zonas' => 'zone'])
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->names('zones');
 });

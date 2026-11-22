@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\ActionNotAllowedException;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -24,6 +25,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // Reglas de negocio que bloquean una acción: regresar con aviso flash.
+        $exceptions->render(function (ActionNotAllowedException $e, Request $request) {
+            if ($request->expectsJson() && ! $request->header('X-Inertia')) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
+
+            return back()->with('error', $e->getMessage());
+        });
+
         // Sesión o token CSRF expirado (419): volver al login con un mensaje claro
         // en lugar de mostrar la pantalla de error genérica.
         $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
