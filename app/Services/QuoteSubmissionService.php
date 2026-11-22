@@ -80,6 +80,7 @@ class QuoteSubmissionService
                         $quote->items()->create([
                             'service_id' => $line['service_id'],
                             'service_name_snapshot' => $line['name'],
+                            'line_type' => $line['kind'],
                             'quantity' => $line['quantity'],
                             'unit_price' => $line['unit_price'],
                             'line_total' => $line['line_total'],

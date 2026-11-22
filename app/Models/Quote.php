@@ -6,6 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Quote extends Model
 {
+    public const STATUS_NEW = 'new';
+
+    public const STATUS_CONTACTED = 'contacted';
+
+    public const STATUS_CONFIRMED = 'confirmed';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
+    public const STATUSES = [self::STATUS_NEW, self::STATUS_CONTACTED, self::STATUS_CONFIRMED, self::STATUS_CANCELLED];
+
     protected $guarded = [];
 
     protected function casts(): array

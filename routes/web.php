@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CoverageZoneController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MediaChunkController;
+use App\Http\Controllers\Admin\QuoteAdminController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\ServiceMediaController;
@@ -88,6 +89,20 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
         Route::patch('/media/{media}', [ServiceMediaController::class, 'update'])->name('media.update');
         Route::delete('/media/{media}', [ServiceMediaController::class, 'destroy'])->name('media.destroy');
         Route::post('/media/upload-chunk', [MediaChunkController::class, 'store'])->name('media.upload-chunk');
+    });
+
+    // Mini-CRM de cotizaciones
+    Route::prefix('cotizaciones')->name('quotes.')->group(function () {
+        Route::middleware('can:quotes.view')->group(function () {
+            Route::get('/', [QuoteAdminController::class, 'index'])->name('index');
+            Route::get('/{quote}', [QuoteAdminController::class, 'show'])->whereNumber('quote')->name('show');
+            Route::get('/{quote}/pdf', [QuoteAdminController::class, 'download'])->whereNumber('quote')->name('pdf');
+        });
+        Route::middleware('can:quotes.manage')->group(function () {
+            Route::patch('/{quote}/estatus', [QuoteAdminController::class, 'updateStatus'])->name('status');
+            Route::patch('/{quote}/notas', [QuoteAdminController::class, 'updateNotes'])->name('notes');
+            Route::post('/{quote}/reenviar', [QuoteAdminController::class, 'resend'])->middleware('throttle:10,1')->name('resend');
+        });
     });
 
     // Perfiles y matriz de permisos

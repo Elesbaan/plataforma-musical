@@ -292,6 +292,7 @@ CREATE TABLE `quote_items` (
   `quantity` int unsigned not null default '1',
   `unit_price` decimal(10, 2) not null,
   `line_total` decimal(10, 2) not null,
+  `line_type` varchar(20) not null default 'service',
   CONSTRAINT `quote_items_quote_id_foreign` FOREIGN KEY (`quote_id`) REFERENCES `quotes` (`id`) on delete cascade,
   CONSTRAINT `quote_items_service_id_foreign` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`) on delete set null
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -453,6 +454,7 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (12, '2026_11_22_023559_create_quote_items_table', 1),
 (13, '2026_11_22_023600_create_event_services_table', 1),
 (14, '2026_11_23_000000_create_rbac_tables', 1),
-(15, '2026_11_24_000000_add_extra_hour_price_to_services_table', 1);
+(15, '2026_11_24_000000_add_extra_hour_price_to_services_table', 1),
+(16, '2026_11_25_000000_add_line_type_to_quote_items_table', 1);
 
 SET FOREIGN_KEY_CHECKS = 1;

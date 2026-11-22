@@ -7,6 +7,17 @@ export function whatsappUrl(number, message = '') {
     return `https://wa.me/${digits}${text}`;
 }
 
+/**
+ * Agrega la lada de país a un teléfono nacional de 10 dígitos tomando la lada
+ * del WhatsApp de la agencia (ej. 52 si la agencia es de México).
+ */
+export function withCountryCode(phone, agencyNumber) {
+    const digits = String(phone ?? '').replace(/\D/g, '');
+    const agency = String(agencyNumber ?? '').replace(/\D/g, '');
+    if (digits.length !== 10 || agency.length <= 10) return digits;
+    return `${agency.slice(0, agency.length - 10)}${digits}`;
+}
+
 export function telUrl(number) {
     const digits = String(number ?? '').replace(/[^\d+]/g, '');
     return digits ? `tel:${digits}` : null;
