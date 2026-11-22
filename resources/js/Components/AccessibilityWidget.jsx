@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Accessibility, Moon, RotateCcw, Sun, X } from 'lucide-react';
+import { Moon, PersonStanding, RotateCcw, Sun, X } from 'lucide-react';
 import {
     FONT_SCALES,
     TOGGLES,
@@ -188,9 +188,9 @@ export default function AccessibilityWidget() {
                 aria-expanded={open}
                 aria-controls={open ? panelId : undefined}
                 aria-label="Abrir opciones de accesibilidad"
-                className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-white shadow-lg ring-2 ring-white/20 transition hover:scale-105"
+                className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg ring-2 ring-white/20 transition hover:scale-105"
             >
-                <Accessibility className="h-7 w-7" aria-hidden="true" />
+                <PersonStanding className="h-8 w-8" strokeWidth={2.5} aria-hidden="true" />
             </button>
         </div>
     );
