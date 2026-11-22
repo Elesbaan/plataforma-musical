@@ -161,8 +161,8 @@ class QuoteSubmissionTest extends TestCase
     {
         $this->post('/cotizador', [])
             ->assertSessionHasErrors([
-                'client_name' => 'Tu nombre completo es obligatorio.',
-                'client_email' => 'Tu correo electrónico es obligatorio.',
+                'client_name' => 'Tu nombre completo es un dato obligatorio.',
+                'client_email' => 'Tu correo electrónico es un dato obligatorio.',
                 'client_phone' => 'Escribe tu teléfono o WhatsApp.',
                 'event_date' => 'Elige la fecha de tu evento.',
                 'event_type' => 'Elige el tipo de evento.',

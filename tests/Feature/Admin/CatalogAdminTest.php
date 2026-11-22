@@ -227,7 +227,7 @@ class CatalogAdminTest extends TestCase
                 'daily_capacity' => '0',
             ]))
             ->assertSessionHasErrors([
-                'name' => 'El nombre es obligatorio.',
+                'name' => 'El nombre es un dato obligatorio.',
                 'category_id',
                 'service_type',
                 'base_price',

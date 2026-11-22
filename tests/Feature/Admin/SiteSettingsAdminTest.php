@@ -127,7 +127,7 @@ class SiteSettingsAdminTest extends TestCase
                 'facebook_url' => 'no-es-url',
             ]))
             ->assertSessionHasErrors([
-                'brand_name' => 'El nombre comercial es obligatorio.',
+                'brand_name' => 'El nombre comercial es un dato obligatorio.',
                 'color_primary' => 'Elige un color primario válido (formato #RRGGBB).',
                 'online_discount_value' => 'Un descuento porcentual no puede ser mayor a 100.',
                 'whatsapp_number',

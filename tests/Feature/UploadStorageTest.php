@@ -60,6 +60,10 @@ class UploadStorageTest extends TestCase
     {
         $validator = Validator::make(['brand_name' => ''], ['brand_name' => 'required']);
 
-        $this->assertSame('El nombre comercial es obligatorio.', $validator->errors()->first('brand_name'));
+        $this->assertSame('El nombre comercial es un dato obligatorio.', $validator->errors()->first('brand_name'));
+
+        // Campos femeninos también concuerdan en género ("La ciudad es un dato obligatorio.").
+        $feminine = Validator::make(['city_name' => ''], ['city_name' => 'required']);
+        $this->assertSame('La ciudad es un dato obligatorio.', $feminine->errors()->first('city_name'));
     }
 }
