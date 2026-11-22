@@ -18,8 +18,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         SiteSetting::create([
             'brand_name' => 'Colectivo Musical Toluca',
             'tagline' => 'Experiencias musicales para celebrar extraordinariamente',
@@ -41,12 +39,14 @@ class DatabaseSeeder extends Seeder
             'hero_subtitle' => 'Producción musical profesional para bodas, XV años y eventos corporativos.',
         ]);
 
-        User::factory()->create([
+        // Sin factory: Faker es dependencia de desarrollo y no existe en producción (--no-dev).
+        $admin = User::create([
             'name' => 'Administrador',
             'email' => 'admin@colectivomusical.mx',
             'password' => Hash::make('password'),
             'role' => 'super_admin',
         ]);
+        $admin->forceFill(['email_verified_at' => now()])->save();
 
         foreach ([
             ['Toluca / Metepec', 'Estado de México', 'local_hq', 'fixed', 0, 1],

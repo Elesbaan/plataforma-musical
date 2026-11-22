@@ -107,3 +107,26 @@ Al finalizar cada instrucción o fase, entrega un resumen breve con evidencia re
 2. **Verificación Responsiva:** Confirmación de adaptación móvil (`360px+`) y escritorio en las vistas tocadas.
 3. **Resultado de Pruebas:** Salida resumida de `php artisan test` y `npm run build`.
 4. **Commit realizado:** Hash y mensaje del commit creado en Git.
+
+## 8. Script SQL Maestro de Producción (`database/production_schema.sql`) — OBLIGATORIO
+
+Dado que el proyecto se desplegará en un entorno compartido (Ferozo / DonWeb) donde la base de datos inicial se importa vía phpMyAdmin o cliente MySQL estándar, **debes mantener siempre actualizado un único archivo SQL maestro** en `database/production_schema.sql`.
+
+### Reglas Estrictas del Archivo SQL Maestro
+1. **Sincronización Continua con Migraciones y Seeders:**
+   - Cada vez que crees o modifiques una migración o un seeder de catálogos iniciales, debes actualizar inmediatamente `database/production_schema.sql` en el mismo commit.
+2. **Edición Limpia desde el `CREATE TABLE` (Prohibido acumular `ALTER TABLE` de desarrollo):**
+   - Si durante el desarrollo cambia la estructura de una tabla ya registrada en `database/production_schema.sql` (nuevas columnas, cambio de tipo de dato, índices o llaves foráneas), **edita directamente la sentencia `CREATE TABLE` original** dentro del archivo. Nunca agregues parches `ALTER TABLE` al final del script; el archivo debe representar siempre una instalación limpia desde cero.
+3. **Compatibilidad Total con MySQL 8.0 / MariaDB 10.6+:**
+   - Usa sintaxis estándar compatible con ambos motores (`ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`).
+   - Inicia el script con `SET FOREIGN_KEY_CHECKS = 0;` y ciérralo con `SET FOREIGN_KEY_CHECKS = 1;` para evitar errores de orden al importar.
+   - Ordena las sentencias `CREATE TABLE` respetando las dependencias de llaves foráneas (`FOREIGN KEY`).
+   - Incluye las tablas internas esenciales de Laravel necesarias para operar en producción (`users`, `sessions`, `cache`, `cache_locks`, `jobs`, `failed_jobs`, `migrations`).
+4. **Datos Iniciales y Catálogos Listos para Operar (`INSERT INTO`):**
+   - Al final del esquema, incluye los `INSERT INTO` correspondientes a:
+     - Usuario administrador inicial (con contraseña hasheada con bcrypt y comentario indicando las credenciales por defecto).
+     - Configuración base de `site_settings` (con valores predeterminados funcionales).
+     - Zonas de cobertura iniciales en `coverage_zones` (ej. Toluca / Metepec como sede base sin viáticos, y ejemplos de zonas foráneas).
+     - Categorías base en `categories` y servicios de muestra en `services` con sus `service_features` para que el sitio y el cotizador funcionen desde el primer segundo tras importar el `.sql`.
+5. **Verificación en el Checklist de Cierre:**
+   - Ninguna tarea que toque base de datos se considera terminada si `database/production_schema.sql` no refleja exactamente el estado actual de las tablas y catálogos.
