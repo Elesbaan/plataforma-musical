@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ServiceRequest;
 use App\Models\Service;
 use App\Services\CategoryService;
+use App\Services\MediaLimits;
 use App\Services\ServiceCatalogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,11 +47,12 @@ class ServiceController extends Controller
             ->with('success', "Se creó {$service->name}. Ahora puedes agregar fotos y videos.");
     }
 
-    public function edit(Service $service): Response
+    public function edit(Service $service, MediaLimits $limits): Response
     {
         return Inertia::render('Admin/Services/Edit', [
             'service' => $this->catalog->forEdit($service),
             'categories' => $this->categories->options(),
+            'mediaLimits' => $limits->toArray(),
         ]);
     }
 

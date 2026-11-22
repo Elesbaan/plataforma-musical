@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Trash2 } from 'lucide-react';
+import MediaManager from '@/Components/Admin/MediaManager';
 import ServiceForm from '@/Components/Admin/ServiceForm';
 import Button from '@/Components/Button';
 import ConfirmDialog from '@/Components/ConfirmDialog';
 import AdminLayout from '@/Layouts/AdminLayout';
 
-export default function Edit({ service, categories }) {
+export default function Edit({ service, categories, mediaLimits }) {
     const [confirming, setConfirming] = useState(false);
     const [processing, setProcessing] = useState(false);
 
@@ -31,6 +32,8 @@ export default function Edit({ service, categories }) {
             }
         >
             <ServiceForm key={service.id} service={service} categories={categories} />
+
+            <MediaManager service={service} limits={mediaLimits} />
 
             <ConfirmDialog
                 open={confirming}

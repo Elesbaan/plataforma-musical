@@ -3,7 +3,9 @@
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CoverageZoneController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\MediaChunkController;
 use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\ServiceMediaController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PublicPageController;
@@ -47,4 +49,11 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         ->parameters(['servicios' => 'service'])
         ->except(['show'])
         ->names('services');
+
+    // Gestor multimedia de servicios
+    Route::post('/servicios/{service}/media/fotos', [ServiceMediaController::class, 'storeImages'])->name('services.media.images');
+    Route::post('/servicios/{service}/media/video', [ServiceMediaController::class, 'storeEmbed'])->name('services.media.embed');
+    Route::patch('/media/{media}', [ServiceMediaController::class, 'update'])->name('media.update');
+    Route::delete('/media/{media}', [ServiceMediaController::class, 'destroy'])->name('media.destroy');
+    Route::post('/media/upload-chunk', [MediaChunkController::class, 'store'])->name('media.upload-chunk');
 });

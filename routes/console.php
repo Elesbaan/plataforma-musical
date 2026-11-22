@@ -1,8 +1,11 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+/*
+| Tareas programadas. En el hosting compartido se ejecutan con un Cron cada minuto:
+|     * * * * * php /ruta/al/proyecto/artisan schedule:run >> /dev/null 2>&1
+*/
+
+// Limpia fragmentos de subidas de video abandonadas.
+Schedule::command('media:clean-chunks')->daily();
