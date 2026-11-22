@@ -1,66 +1,111 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Plataforma de Colectivo Musical y Eventos
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sitio público, cotizador en línea con PDF, mini-CRM, agenda multi-evento y panel administrativo con perfiles y permisos.
+**Laravel 11 + Inertia.js + React + Tailwind CSS**, pensado para hosting compartido (Ferozo/DonWeb) sin Node.js ni procesos persistentes en el servidor.
 
-## About Laravel
+- Reglas técnicas y de calidad: [AGENTS.md](AGENTS.md)
+- Especificación funcional: [CLAUDE_MASTER_SPEC.md](CLAUDE_MASTER_SPEC.md)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Desarrollo local
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```bash
+php composer.phar install
+npm install
+cp .env.example .env && php artisan key:generate
+php artisan migrate --seed
+npm run dev          # o npm run build
+php artisan test
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Acceso al panel: `/admin/login` (o `/login`) con `admin@colectivomusical.mx` / `password`.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Despliegue a Ferozo/DonWeb
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+El despliegue se hace desde Windows con `deploy.ps1`, que compila, arma una copia limpia de producción y la sube por **FTPS explícito**. Solo sube los archivos que cambiaron desde el último despliegue.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Requisitos en tu equipo
 
-## Laravel Sponsors
+- PHP con las extensiones `ftp` y `openssl` (XAMPP las incluye), Node.js y npm.
+- El archivo **`.env.deploy`** en la raíz del proyecto (cópialo desde [.env.deploy.example](.env.deploy.example)). Está en `.gitignore`: **nunca lo subas al repositorio ni lo compartas.**
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| Variable | Descripción |
+|---|---|
+| `FTP_HOST`, `FTP_PORT` | Servidor FTP (puerto 21 para FTPS explícito). |
+| `FTP_USER`, `FTP_PASSWORD` | Cuenta FTP. La contraseña nunca se imprime en consola. |
+| `FTP_REMOTE_PATH` | Carpeta remota de la raíz del proyecto (donde quedará `artisan`), ej. `/public_html`. |
+| `FTP_SECURE` | `true` (recomendado) para cifrar la conexión con TLS. |
+| `DEPLOY_ROOT_HTACCESS` | Opcional. `true` si el dominio apunta a `FTP_REMOTE_PATH` y no a su carpeta `public/` (ver abajo). |
 
-### Premium Partners
+### Ejecutar un despliegue
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+```powershell
+.\deploy.ps1 -DryRun     # simulación: arma la copia y lista lo que subiría, sin conectarse
+.\deploy.ps1             # despliegue real (pide escribir DESPLEGAR para confirmar)
+```
 
-## Contributing
+Opciones: `-Full` vuelve a subir todo (ignora el historial local), `-SkipBuild` omite `npm run build` y `-Yes` no pide confirmación.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Si PowerShell bloquea el script, ejecútalo con `powershell -ExecutionPolicy Bypass -File .\deploy.ps1`.
 
-## Code of Conduct
+**Qué hace el script:**
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. Lee `.env.deploy` sin mostrar la contraseña.
+2. Ejecuta `npm run build` y se detiene si falla.
+3. Arma `.deploy\release` con: `app`, `bootstrap`, `config`, `database/production_schema.sql`, `lang`, `public`, `resources`, `routes`, la estructura de `storage`, `vendor` **sin dependencias de desarrollo** (`composer install --no-dev`), `artisan`, `composer.json` y `composer.lock`.
+4. Excluye `node_modules`, `.git`, `tests`, `.env`, `.env.deploy`, `database.sqlite`, logs, sesiones, cachés locales y los archivos subidos de `public/uploads` (conserva carpetas, `.gitkeep` y `.htaccess`). Si detecta algo sensible en la copia, se detiene.
+5. Sube cada archivo como `nombre.uploading` y luego lo renombra, para que el sitio nunca sirva un archivo a medio subir. Si la conexión falla, vuelve a ejecutar el script: continúa donde se quedó.
 
-## Security Vulnerabilities
+> El script **nunca sobrescribe** el `.env` del servidor, las fotos y videos subidos (`public/uploads`), los PDF de cotizaciones ni los logs.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+> `ftp_ssl_connect` de PHP cifra la conexión, pero no valida el certificado del servidor. Despliega solo desde redes de confianza.
 
-## License
+### Raíz web: `public/` vs `public_html`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- **Recomendado:** en el panel de Ferozo, apunta el dominio a `FTP_REMOTE_PATH/public` (ej. `/public_html/public`). Deja `DEPLOY_ROOT_HTACCESS=false`.
+- **Si Ferozo solo permite `/public_html` como raíz:** usa `DEPLOY_ROOT_HTACCESS=true`. El script sube [deploy/root.htaccess](deploy/root.htaccess) como `.htaccess` raíz, que sirve todo desde `public/` (las URLs no muestran `/public`), bloquea archivos ocultos (`.env`) y responde 403 a `app/`, `vendor/`, `storage/`, `database/` y demás carpetas del proyecto.
+
+Después del primer despliegue, verifica que `https://tudominio.mx/.env` y `https://tudominio.mx/vendor/` respondan **403 o 404**.
+
+---
+
+## Primera instalación en Ferozo (una sola vez)
+
+1. **Base de datos:** en el panel de Ferozo crea una base MySQL/MariaDB y su usuario.
+2. **Importar el esquema:** en phpMyAdmin selecciona la base e importa [database/production_schema.sql](database/production_schema.sql). Incluye todas las tablas, perfiles y permisos, la configuración inicial, las zonas, el catálogo de muestra y el usuario administrador.
+3. **Raíz web:** configura el dominio como se explica arriba.
+4. **Subir el proyecto:** ejecuta `.\deploy.ps1`. La primera vez sube unos 6,800 archivos (alrededor de 36 MB) y puede tardar varios minutos.
+5. **Crear el `.env` del servidor:** con el administrador de archivos de Ferozo o tu cliente FTP, crea `.env` en `FTP_REMOTE_PATH` (junto a `artisan`) a partir de [deploy/env.production.example](deploy/env.production.example):
+   - `APP_KEY`: genérala en tu equipo con `php artisan key:generate --show`.
+   - `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL` con tu dominio (https).
+   - Datos de la base MySQL del paso 1 y de la cuenta SMTP para los correos de cotización.
+6. **Permisos de escritura:** `storage/`, `bootstrap/cache/` y `public/uploads/` deben poder escribirse (755 o 775, según el hosting).
+7. **Cron Job:** en Ferozo agrega una tarea programada **cada minuto** (confirma en el panel la ruta de PHP; suele ser `/usr/bin/php` o `/usr/local/bin/php`):
+   ```
+   * * * * * /usr/bin/php /home/TU_USUARIO/public_html/artisan schedule:run >> /dev/null 2>&1
+   ```
+   Limpia diariamente los fragmentos de videos abandonados (`media:clean-chunks`).
+8. **Primer acceso:** entra a `/admin/login` con `admin@colectivomusical.mx` / `password` y **cambia la contraseña de inmediato** (Usuarios → tu cuenta). Después completa **Identidad y marca**, sobre todo el `contact_email`, que recibe las notificaciones de cotizaciones.
+
+---
+
+## Despliegues posteriores
+
+```powershell
+.\deploy.ps1
+```
+
+`database/production_schema.sql` sirve solo para la **instalación inicial**. Cuando un despliegue incluye migraciones nuevas o permisos nuevos, hay que ejecutar en el servidor:
+
+```bash
+php artisan migrate --force
+php artisan permissions:sync
+```
+
+- **Con acceso SSH:** ejecútalos desde la carpeta del proyecto.
+- **Sin SSH:** crea en Ferozo una tarea Cron temporal (por ejemplo, para dentro de 2 minutos) con
+  `/usr/bin/php /home/TU_USUARIO/public_html/artisan migrate --force && /usr/bin/php /home/TU_USUARIO/public_html/artisan permissions:sync`
+  y **elimínala** en cuanto se ejecute.
+
+Antes de migrar en producción, respalda la base desde phpMyAdmin (Exportar).

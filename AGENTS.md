@@ -186,3 +186,13 @@ Dado que el proyecto se desplegará en un entorno compartido (Ferozo / DonWeb) d
 2. **Capacidad diaria:** las alertas de capacidad (alcanza = aviso, supera = sobrecupo) salen de `AvailabilityService::conflicts()` / `saturatedDays()`. Crear, editar o convertir un evento reservado con sobrecupo exige confirmación explícita (`force_overbooking`). Al editar, el evento no cuenta contra sí mismo.
 3. **Conversión de cotizaciones:** solo `QuoteConversionService` crea eventos desde cotizaciones (requiere `quotes.manage` y `events.manage`). Copia únicamente las partidas `line_type = service` (las horas extra no ocupan capacidad) y marca la cotización como confirmada. El estatus “Confirmada” no se asigna manualmente sin evento.
 4. **Dashboard:** `DashboardService` calcula cada bloque solo si el usuario tiene el permiso correspondiente; no agregues métricas sin esa verificación.
+
+---
+
+## 13. Despliegue a Producción (Ferozo/DonWeb) — OBLIGATORIO
+
+1. **Único mecanismo:** el despliegue se hace con `.\deploy.ps1` (ver README.md). No subas archivos a mano salvo el `.env` del servidor en la primera instalación.
+2. **Credenciales:** las credenciales FTP viven solo en `.env.deploy` (ignorado por Git). Nunca las leas, imprimas, copies a otros archivos ni las incluyas en commits o mensajes. El `.env` de producción vive únicamente en el servidor (plantilla: `deploy/env.production.example`).
+3. **Contenido de la copia:** `vendor` siempre sin dependencias de desarrollo; nunca se suben `.env*`, `database.sqlite`, `tests`, `node_modules`, `bootstrap/cache/*.php`, logs, sesiones ni archivos de `public/uploads`. Si agregas una carpeta de primer nivel que deba ir a producción, actualiza `deploy.ps1` y el README.
+4. **Confirmación:** ejecutar un despliegue real modifica el sitio en vivo; solicita autorización explícita del usuario antes de correr `.\deploy.ps1` sin `-DryRun`.
+5. **Esquema:** `database/production_schema.sql` es solo para la instalación inicial; los cambios posteriores se aplican con `php artisan migrate --force` y `php artisan permissions:sync` en el servidor.

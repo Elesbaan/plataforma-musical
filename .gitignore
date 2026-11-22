@@ -29,3 +29,7 @@ yarn-error.log
 !/public/uploads/**/.gitkeep
 !/public/uploads/**/.htaccess
 !/public/uploads/.htaccess
+
+# Despliegue: credenciales FTP locales y carpeta de trabajo (nunca versionar)
+.env.deploy
+/.deploy
